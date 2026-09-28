@@ -453,6 +453,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.deferReply({ ephemeral: false });
 
       await permanentBanUser(user.id, reason);
+      await recordAction(user, "PBAN", reason, interaction);
 
      await interaction.editReply(
       `🚫 Permanently banned **${user.name}** for **${reason}**.`
@@ -478,6 +479,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await interaction.deferReply({ ephemeral: false });
       await unbanUser(user.id);
+      await recordAction(user, "UNPBAN", "Manual permanent ban removal", interaction);
 
       await interaction.editReply(
         `✅ Unbanned **${user.name}**.`
@@ -563,6 +565,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.editReply(
         `✅ Set **${user.name}** to **${role.displayName}** (rank ${role.rank}).`
       );
+      await recordAction(user, "SETRANK", `Set to ${role.displayName} (rank ${role.rank})`, interaction, { toRank: role.rank });
 
       await logAction(
         interaction,
@@ -639,6 +642,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.editReply(
         `✅ Ranked **${verified.username}** as **${role.displayName}** (rank ${role.rank}).`
       );
+      await recordAction({ id: verified.userId, name: verified.username }, "RANK", `Set to ${role.displayName} (rank ${role.rank})`, interaction, { toRank: role.rank });
 
       await logAction(
         interaction,
@@ -663,6 +667,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.editReply(
         `✅ Removed the current highest Roblox group role from **${verified.username}**.`
       );
+      await recordAction({ id: verified.userId, name: verified.username }, "UNRANK", "Removed current highest role", interaction);
 
       await logAction(
         interaction,
