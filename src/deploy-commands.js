@@ -104,6 +104,15 @@ const commands = [
       o.setName("reason")
         .setDescription("Reason for the permanent ban")
         .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("unban")
+    .setDescription("Unban a Roblox user from the game.")
+    .addStringOption(o =>
+      o.setName("username")
+        .setDescription("Roblox username to unban")
+        .setRequired(true)
     )
   ];
 
