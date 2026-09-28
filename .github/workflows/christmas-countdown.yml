@@ -40,27 +40,14 @@ jobs:
           days = (christmas - today).days
 
           if days == 0:
-              message = """🎄🎅 **MERRY CHRISTMAS!** 🎅🎄
-🎁 Hope everyone has an amazing Christmas! ❤️"""
+              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄" + chr(10) + "🎁 Hope everyone has an amazing Christmas! ❤️"
           else:
               messages = [
-                  f"""🎄 **CHRISTMAS COUNTDOWN!** 🎄
-🎅 Only **{days} days** until Christmas! 🎁✨
-
-☃️ The countdown is officially on!""",
-                  f"""🎅 **GOOD MORNING!** 🎅
-🎄 **{days} days** until Christmas! 🎁
-
-🔔 Keep spreading the Christmas spirit! ✨""",
-                  f"""❄️ **Christmas Countdown** ❄️
-🎄 **{days} days** to go until Christmas! 🎅🎁
-
-☃️ Who's ready?!"""
+                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄" + chr(10) + f"🎅 Only **{days} days** until Christmas! 🎁✨" + chr(10) + "☃️ The countdown is officially on!",
+                  f"🎅 **GOOD MORNING!** 🎅" + chr(10) + f"🎄 **{days} days** until Christmas! 🎁" + chr(10) + "🔔 Keep spreading the Christmas spirit! ✨",
+                  f"❄️ **Christmas Countdown** ❄️" + chr(10) + f"🎄 **{days} days** to go until Christmas! 🎅🎁" + chr(10) + "☃️ Who's ready?!"
               ]
               message = random.choice(messages)
-
-          # Normalize any escaped newline text before sending.
-          message = message.replace("\\n", "\n")
 
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
