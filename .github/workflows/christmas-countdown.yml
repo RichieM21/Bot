@@ -2,7 +2,7 @@ name: Christmas Countdown
 
 on:
   schedule:
-    - cron: "15 0 * * *"
+    - cron: "0 1 * * *"
       timezone: "America/New_York"
   workflow_dispatch:
 
@@ -21,7 +21,7 @@ jobs:
           echo "date=$DATE" >> "$GITHUB_OUTPUT"
 
       - name: Send countdown
-        if: steps.time.outputs.hour == '00' || github.event_name == 'workflow_dispatch'
+        if: steps.time.outputs.hour == '01' || github.event_name == 'workflow_dispatch'
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: "1430731225944821842"
