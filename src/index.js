@@ -96,8 +96,8 @@ function formatHistory(entries, filter = null) {
   if (!items.length) return "No moderation history found.";
   return items.slice(0, 15).map((entry, i) => {
     const date = new Date(entry.timestamp).toLocaleString();
-    return `**${i + 1}. ${entry.action}** — ${entry.reason || "No reason"}\\nStaff: ${entry.staffTag || entry.staffId || "Unknown"}\\n${date}`;
-  }).join("\\n\\n");
+    return `**${i + 1}. ${entry.action}** — ${entry.reason || "No reason"}\nStaff: ${entry.staffTag || entry.staffId || "Unknown"}\n${date}`;
+  }).join("\n\n");
 }
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -239,7 +239,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const user = await getRobloxUser(username);
       await recordAction(user, "WARN", reason, interaction);
       await interaction.reply({ content: `⚠️ Warned **${user.name}**. Reason: ${reason}`, ephemeral: false });
-      await logAction(interaction, `⚠️ **Warning**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nReason: ${reason}`);
+      await logAction(interaction, `⚠️ **Warning**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nReason: ${reason}`);
       return;
     }
 
@@ -258,7 +258,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const user = await getRobloxUser(interaction.options.getString("username", true));
       await clearWarnings(user.id);
       await interaction.reply({ content: `✅ Cleared warnings for **${user.name}**.`, ephemeral: false });
-      await logAction(interaction, `🧹 **Warnings Cleared**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})`);
+      await logAction(interaction, `🧹 **Warnings Cleared**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})`);
       return;
     }
 
@@ -269,7 +269,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await publishGameMessage("discord-moderation", { action: "KICK", userId: user.id, reason });
       await recordAction(user, "KICK", reason, interaction);
       await interaction.reply({ content: `👢 Kicked **${user.name}** from active game servers.`, ephemeral: false });
-      await logAction(interaction, `👢 **Kick**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nReason: ${reason}`);
+      await logAction(interaction, `👢 **Kick**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nReason: ${reason}`);
       return;
     }
 
@@ -280,8 +280,8 @@ client.on(Events.InteractionCreate, async interaction => {
       const reason = interaction.options.getString("reason", true).trim();
       await temporaryBanUser(user.id, minutes * 60, reason);
       await recordAction(user, "BAN", reason, interaction, { durationMinutes: minutes });
-      await interaction.reply({ content: `🔨 Banned **${user.name}** for **${minutes} minutes**.\\nReason: ${reason}`, ephemeral: false });
-      await logAction(interaction, `🔨 **Temporary Ban**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nDuration: ${minutes} minutes\\nReason: ${reason}`);
+      await interaction.reply({ content: `🔨 Banned **${user.name}** for **${minutes} minutes**.\nReason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔨 **Temporary Ban**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nDuration: ${minutes} minutes\nReason: ${reason}`);
       return;
     }
 
@@ -292,8 +292,8 @@ client.on(Events.InteractionCreate, async interaction => {
       const reason = interaction.options.getString("reason", true).trim();
       await publishGameMessage("discord-moderation", { action: "MUTE", userId: user.id, durationSeconds: minutes * 60, reason });
       await recordAction(user, "MUTE", reason, interaction, { durationMinutes: minutes });
-      await interaction.reply({ content: `🔇 Muted **${user.name}** for **${minutes} minutes**.\\nReason: ${reason}`, ephemeral: false });
-      await logAction(interaction, `🔇 **Mute**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nDuration: ${minutes} minutes\\nReason: ${reason}`);
+      await interaction.reply({ content: `🔇 Muted **${user.name}** for **${minutes} minutes**.\nReason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔇 **Mute**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nDuration: ${minutes} minutes\nReason: ${reason}`);
       return;
     }
 
@@ -303,7 +303,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await publishGameMessage("discord-moderation", { action: "UNMUTE", userId: user.id });
       await recordAction(user, "UNMUTE", "Manual unmute", interaction);
       await interaction.reply({ content: `🔊 Unmuted **${user.name}**.`, ephemeral: false });
-      await logAction(interaction, `🔊 **Unmute**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})`);
+      await logAction(interaction, `🔊 **Unmute**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})`);
       return;
     }
 
@@ -323,7 +323,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const note = interaction.options.getString("note", true).trim();
       await addStaffNote(user.id, { note, staffId: interaction.user.id, staffTag: interaction.user.tag, timestamp: new Date().toISOString() });
       await interaction.reply({ content: `📝 Added a staff note for **${user.name}**.`, ephemeral: false });
-      await logAction(interaction, `📝 **Staff Note Added**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nNote: ${note}`);
+      await logAction(interaction, `📝 **Staff Note Added**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nNote: ${note}`);
       return;
     }
 
@@ -349,7 +349,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const restriction = await getUserRestriction(user.id);
       const rank = current?.role ? `${current.role.displayName} (rank ${current.role.rank})` : "Not in group";
       const status = restriction?.gameJoinRestriction?.active
-        ? `🔴 Banned\\nReason: ${restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided."}`
+        ? `🔴 Banned\nReason: ${restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided."}`
         : "🟢 Not currently game banned.";
       const embed = new EmbedBuilder().setColor(0x22c55e).setTitle(`🎮 Game Info — ${user.name}`).addFields(
         { name: "Group rank", value: rank },
@@ -363,8 +363,8 @@ client.on(Events.InteractionCreate, async interaction => {
       requireStaff(interaction);
       const message = interaction.options.getString("message", true).trim();
       await publishGameMessage("discord-moderation", { action: "ANNOUNCE", message });
-      await interaction.reply({ content: `📢 Announcement sent to live game servers.\\n${message}`, ephemeral: false });
-      await logAction(interaction, `📢 **Game Announcement**\\nStaff: ${interaction.user.tag}\\nMessage: ${message}`);
+      await interaction.reply({ content: `📢 Announcement sent to live game servers.\n${message}`, ephemeral: false });
+      await logAction(interaction, `📢 **Game Announcement**\nStaff: ${interaction.user.tag}\nMessage: ${message}`);
       return;
     }
 
@@ -374,7 +374,7 @@ client.on(Events.InteractionCreate, async interaction => {
       await publishGameMessage("discord-moderation", { action: "SHUTDOWN", reason });
       await restartUniverseServers();
       await interaction.reply({ content: `🔄 Restart request sent to all game servers. Reason: ${reason}`, ephemeral: false });
-      await logAction(interaction, `🔄 **Server Shutdown/Restart**\\nStaff: ${interaction.user.tag}\\nReason: ${reason}`);
+      await logAction(interaction, `🔄 **Server Shutdown/Restart**\nStaff: ${interaction.user.tag}\nReason: ${reason}`);
       return;
     }
 
@@ -382,8 +382,8 @@ client.on(Events.InteractionCreate, async interaction => {
       requireStaff(interaction);
       const reason = interaction.options.getString("reason", true).trim();
       await publishGameMessage("discord-moderation", { action: "SERVERLOCK", reason });
-      await interaction.reply({ content: `🔒 Live game servers are now locked against new joins.\\nReason: ${reason}`, ephemeral: false });
-      await logAction(interaction, `🔒 **Server Lock**\\nStaff: ${interaction.user.tag}\\nReason: ${reason}`);
+      await interaction.reply({ content: `🔒 Live game servers are now locked against new joins.\nReason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔒 **Server Lock**\nStaff: ${interaction.user.tag}\nReason: ${reason}`);
       return;
     }
 
@@ -391,7 +391,7 @@ client.on(Events.InteractionCreate, async interaction => {
       requireStaff(interaction);
       await publishGameMessage("discord-moderation", { action: "SERVERUNLOCK" });
       await interaction.reply({ content: "🔓 Live game servers have been unlocked.", ephemeral: false });
-      await logAction(interaction, `🔓 **Server Unlock**\\nStaff: ${interaction.user.tag}`);
+      await logAction(interaction, `🔓 **Server Unlock**\nStaff: ${interaction.user.tag}`);
       return;
     }
 
@@ -411,7 +411,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const action = interaction.commandName === "promote" ? "PROMOTE" : "DEMOTE";
       await recordAction(user, action, `${current.role.displayName} → ${targetRole.displayName}`, interaction, { fromRank: current.role.rank, toRank: targetRole.rank });
       await interaction.reply({ content: `${action === "PROMOTE" ? "⬆️" : "⬇️"} **${user.name}** is now **${targetRole.displayName}** (rank ${targetRole.rank}).`, ephemeral: false });
-      await logAction(interaction, `📋 **${action}**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nNew role: ${targetRole.displayName} (${targetRole.rank})`);
+      await logAction(interaction, `📋 **${action}**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nNew role: ${targetRole.displayName} (${targetRole.rank})`);
       return;
     }
 
