@@ -27,9 +27,10 @@ local function setMuted(userId, durationSeconds)
     mutedUntil[id] = os.time() + (tonumber(durationSeconds) or 0)
 
     for _, channel in ipairs(TextChatService.TextChannels:GetChildren()) do
-        local source = channel:FindFirstChild(tostring(id))
-        if source and source:IsA("TextSource") then
-            source.CanSend = false
+        for _, source in ipairs(channel:GetChildren()) do
+            if source:IsA("TextSource") and source.UserId == id then
+                source.CanSend = false
+            end
         end
     end
 end
@@ -40,9 +41,10 @@ local function unmute(userId)
     mutedUntil[id] = nil
 
     for _, channel in ipairs(TextChatService.TextChannels:GetChildren()) do
-        local source = channel:FindFirstChild(tostring(id))
-        if source and source:IsA("TextSource") then
-            source.CanSend = true
+        for _, source in ipairs(channel:GetChildren()) do
+            if source:IsA("TextSource") and source.UserId == id then
+                source.CanSend = true
+            end
         end
     end
 end
@@ -58,9 +60,10 @@ local function applyMuteToPlayer(player)
 
     task.delay(0.5, function()
         for _, channel in ipairs(TextChatService.TextChannels:GetChildren()) do
-            local source = channel:FindFirstChild(tostring(player.UserId))
-            if source and source:IsA("TextSource") then
-                source.CanSend = false
+            for _, source in ipairs(channel:GetChildren()) do
+                if source:IsA("TextSource") and source.UserId == player.UserId then
+                    source.CanSend = false
+                end
             end
         end
     end)
