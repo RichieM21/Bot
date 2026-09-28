@@ -23,36 +23,29 @@ jobs:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: "1430731225944821842"
         run: |
-          DAYS=$(python - <<'PY'
-          from datetime import date
-          import zoneinfo
-          now = date.today()
-          # GitHub runners are UTC; use Eastern date explicitly.
-          from datetime import datetime
-          eastern = datetime.now(zoneinfo.ZoneInfo("America/New_York")).date()
+          python - <<'PY'
+          import json, os, random, urllib.request
+          from datetime import date, datetime
+          from zoneinfo import ZoneInfo
+
+          eastern = datetime.now(ZoneInfo("America/New_York")).date()
           christmas = date(eastern.year, 12, 25)
           if eastern >= christmas:
               christmas = date(eastern.year + 1, 12, 25)
-          print((christmas - eastern).days)
-          PY
-          )
+          days = (christmas - eastern).days
 
-          if [ "$DAYS" -eq 0 ]; then
-            MESSAGE='🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\n\n🎁 Hope everyone has an amazing Christmas! ❤️'
-          else
-            MESSAGES=(
-              "🎄 **CHRISTMAS COUNTDOWN!** 🎄\n\n🎅 Only **$DAYS days** until Christmas! 🎁✨\n\n☃️ The countdown is officially on!"
-              "🎅 **GOOD MORNING!** 🎅\n\n🎄 **$DAYS days** until Christmas! 🎁\n\n🔔 Keep spreading the Christmas spirit! ✨"
-              "❄️ **Christmas Countdown** ❄️\n\n🎄 **$DAYS days** to go until Christmas! 🎅🎁\n\n☃️ Who's ready?!"
-            )
-            MESSAGE="${MESSAGES[$((RANDOM % 3))]}"
-          fi
+          if days == 0:
+              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\\n\\n🎁 Hope everyone has an amazing Christmas! ❤️"
+          else:
+              messages = [
+                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄\\n\\n🎅 Only **{days} days** until Christmas! 🎁✨\\n\\n☃️ The countdown is officially on!",
+                  f"🎅 **GOOD MORNING!** 🎅\\n\\n🎄 **{days} days** until Christmas! 🎁\\n\\n🔔 Keep spreading the Christmas spirit! ✨",
+                  f"❄️ **Christmas Countdown** ❄️\\n\\n🎄 **{days} days** to go until Christmas! 🎅🎁\\n\\n☃️ Who's ready?!"
+              ]
+              message = random.choice(messages)
 
-          python - <<'PY'
-          import json, os, urllib.request
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
-          message = os.environ["MESSAGE"]
           req = urllib.request.Request(
               f"https://discord.com/api/v10/channels/{channel}/messages",
               data=json.dumps({"content": message}).encode(),
@@ -63,8 +56,6 @@ jobs:
               },
               method="POST",
           )
-          with urllib.request.urlopen(req) as r:
-              print(r.status)
+          with urllib.request.urlopen(req) as response:
+              print(f"Discord response: {response.status}")
           PY
-        env:
-          MESSAGE: ${{ env.MESSAGE }}
