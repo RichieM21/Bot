@@ -199,3 +199,22 @@ export async function unbanUser(userId) {
     }
   );
 }
+
+export async function getUserRestriction(userId) {
+  const universeId = process.env.ROBLOX_UNIVERSE_ID;
+
+  if (!universeId) {
+    throw new Error("ROBLOX_UNIVERSE_ID is not configured.");
+  }
+
+  try {
+    return await robloxFetch(
+      `${API}/cloud/v2/universes/${universeId}/user-restrictions/${userId}`
+    );
+  } catch (error) {
+    if (String(error.message).includes("Roblox API 404")) {
+      return null;
+    }
+    throw error;
+  }
+}
