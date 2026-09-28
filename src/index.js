@@ -126,7 +126,50 @@ client.on(Events.InteractionCreate, async interaction => {
       });
       return;
     }
-        if (interaction.commandName === "myinfo") {
+        if (interaction.commandName === "userinfo") {
+      requireStaff(interaction);
+
+      const target = interaction.options.getUser("user", true);
+      const verified = await getVerified(target.id);
+
+      let robloxInfo = "❌ No Roblox account is linked.";
+      let banInfo = "🟢 Not currently game banned.";
+      let blacklistInfo = "🟢 Not staff blacklisted.";
+
+      if (verified) {
+        robloxInfo = `👤 **Username:** ${verified.username}\n🆔 **User ID:** ${verified.userId}`;
+
+        const restriction = await getUserRestriction(verified.userId);
+        if (restriction?.gameJoinRestriction?.active) {
+          const reason =
+            restriction.gameJoinRestriction.displayReason ||
+            restriction.gameJoinRestriction.privateReason ||
+            "No reason provided.";
+          banInfo = `🔴 **Currently game banned**\n**Reason:** ${reason}`;
+        }
+      }
+
+      const blacklist = await getBlacklistEntry(target.id);
+      if (blacklist) {
+        blacklistInfo = `🔴 **Staff blacklisted**\n**Reason:** ${blacklist.reason || "No reason provided."}`;
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0xef4444)
+        .setTitle(`🔨 Punishments — ${target.username}`)
+        .addFields(
+          { name: "Roblox account", value: robloxInfo },
+          { name: "Game ban", value: banInfo },
+          { name: "Staff blacklist", value: blacklistInfo }
+        )
+        .setFooter({ text: `Requested by ${interaction.user.username}` })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "myinfo") {
       const verified = await getVerified(interaction.user.id);
       const blacklist = await getBlacklistEntry(interaction.user.id);
 
