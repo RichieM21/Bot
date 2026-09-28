@@ -15,7 +15,8 @@ import {
   assignRole,
   unassignHighestRole,
   getCurrentRole,
-  permanentBanUser
+  permanentBanUser,
+  unbanUser
 } from "./roblox.js";
 
 import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry } from "./db.js";
@@ -148,6 +149,31 @@ client.on(Events.InteractionCreate, async interaction => {
       await logAction(
         interaction,
         `🚫 **Permanent Roblox Ban**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nReason: ${reason}`
+      );
+
+      return;
+    }
+
+    if (interaction.commandName === "unban") {
+      requireStaff(interaction);
+
+      const username = interaction.options.getString("username", true).trim();
+      const user = await getUserByUsername(username);
+
+      if (!user) {
+        throw new Error("Roblox username not found.");
+      }
+
+      await interaction.deferReply({ ephemeral: false });
+      await unbanUser(user.id);
+
+      await interaction.editReply(
+        `✅ Unbanned **${user.name}**.`
+      );
+
+      await logAction(
+        interaction,
+        `✅ **Roblox Unban**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})`
       );
 
       return;
