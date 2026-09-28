@@ -231,6 +231,214 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
 
+
+    if (interaction.commandName === "warn") {
+      requireStaff(interaction);
+      const username = interaction.options.getString("username", true);
+      const reason = interaction.options.getString("reason", true).trim();
+      const user = await getRobloxUser(username);
+      await recordAction(user, "WARN", reason, interaction);
+      await interaction.reply({ content: `⚠️ Warned **${user.name}**. Reason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `⚠️ **Warning**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nReason: ${reason}`);
+      return;
+    }
+
+    if (interaction.commandName === "warnings") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const history = await getModerationHistory(user.id);
+      const text = formatHistory(history, e => e.action === "WARN");
+      const embed = new EmbedBuilder().setColor(0xf59e0b).setTitle(`⚠️ Warnings — ${user.name}`).setDescription(text).setFooter({ text: `Requested by ${interaction.user.username}` }).setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "clearwarnings") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      await clearWarnings(user.id);
+      await interaction.reply({ content: `✅ Cleared warnings for **${user.name}**.`, ephemeral: false });
+      await logAction(interaction, `🧹 **Warnings Cleared**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})`);
+      return;
+    }
+
+    if (interaction.commandName === "kick") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const reason = interaction.options.getString("reason", true).trim();
+      await publishGameMessage("discord-moderation", { action: "KICK", userId: user.id, reason });
+      await recordAction(user, "KICK", reason, interaction);
+      await interaction.reply({ content: `👢 Kicked **${user.name}** from active game servers.`, ephemeral: false });
+      await logAction(interaction, `👢 **Kick**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nReason: ${reason}`);
+      return;
+    }
+
+    if (interaction.commandName === "ban") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const minutes = interaction.options.getInteger("duration", true);
+      const reason = interaction.options.getString("reason", true).trim();
+      await temporaryBanUser(user.id, minutes * 60, reason);
+      await recordAction(user, "BAN", reason, interaction, { durationMinutes: minutes });
+      await interaction.reply({ content: `🔨 Banned **${user.name}** for **${minutes} minutes**.\\nReason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔨 **Temporary Ban**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nDuration: ${minutes} minutes\\nReason: ${reason}`);
+      return;
+    }
+
+    if (interaction.commandName === "mute") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const minutes = interaction.options.getInteger("duration", true);
+      const reason = interaction.options.getString("reason", true).trim();
+      await publishGameMessage("discord-moderation", { action: "MUTE", userId: user.id, durationSeconds: minutes * 60, reason });
+      await recordAction(user, "MUTE", reason, interaction, { durationMinutes: minutes });
+      await interaction.reply({ content: `🔇 Muted **${user.name}** for **${minutes} minutes**.\\nReason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔇 **Mute**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nDuration: ${minutes} minutes\\nReason: ${reason}`);
+      return;
+    }
+
+    if (interaction.commandName === "unmute") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      await publishGameMessage("discord-moderation", { action: "UNMUTE", userId: user.id });
+      await recordAction(user, "UNMUTE", "Manual unmute", interaction);
+      await interaction.reply({ content: `🔊 Unmuted **${user.name}**.`, ephemeral: false });
+      await logAction(interaction, `🔊 **Unmute**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})`);
+      return;
+    }
+
+    if (interaction.commandName === "history" || interaction.commandName === "modlog" || interaction.commandName === "stafflog") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const history = await getModerationHistory(user.id);
+      const text = formatHistory(history);
+      const embed = new EmbedBuilder().setColor(0x6366f1).setTitle(`📋 Moderation History — ${user.name}`).setDescription(text).setFooter({ text: `Requested by ${interaction.user.username}` }).setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "notes") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const note = interaction.options.getString("note", true).trim();
+      await addStaffNote(user.id, { note, staffId: interaction.user.id, staffTag: interaction.user.tag, timestamp: new Date().toISOString() });
+      await interaction.reply({ content: `📝 Added a staff note for **${user.name}**.`, ephemeral: false });
+      await logAction(interaction, `📝 **Staff Note Added**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nNote: ${note}`);
+      return;
+    }
+
+    if (interaction.commandName === "profile") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const profile = await getUserProfile(user.id);
+      const embed = new EmbedBuilder().setColor(0x3b82f6).setTitle(`👤 Roblox Profile — ${profile.name}`).addFields(
+        { name: "Username", value: profile.name, inline: true },
+        { name: "Display name", value: profile.displayName || profile.name, inline: true },
+        { name: "User ID", value: String(profile.id), inline: true },
+        { name: "Created", value: profile.created ? new Date(profile.created).toLocaleDateString() : "Unknown", inline: true },
+        { name: "Description", value: (profile.description || "No description.").slice(0, 1000) }
+      ).setFooter({ text: `Requested by ${interaction.user.username}` }).setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "gameinfo") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const current = await getCurrentRole(user.id);
+      const restriction = await getUserRestriction(user.id);
+      const rank = current?.role ? `${current.role.displayName} (rank ${current.role.rank})` : "Not in group";
+      const status = restriction?.gameJoinRestriction?.active
+        ? `🔴 Banned\\nReason: ${restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided."}`
+        : "🟢 Not currently game banned.";
+      const embed = new EmbedBuilder().setColor(0x22c55e).setTitle(`🎮 Game Info — ${user.name}`).addFields(
+        { name: "Group rank", value: rank },
+        { name: "Game status", value: status }
+      ).setFooter({ text: `Requested by ${interaction.user.username}` }).setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "announce") {
+      requireStaff(interaction);
+      const message = interaction.options.getString("message", true).trim();
+      await publishGameMessage("discord-moderation", { action: "ANNOUNCE", message });
+      await interaction.reply({ content: `📢 Announcement sent to live game servers.\\n${message}`, ephemeral: false });
+      await logAction(interaction, `📢 **Game Announcement**\\nStaff: ${interaction.user.tag}\\nMessage: ${message}`);
+      return;
+    }
+
+    if (interaction.commandName === "shutdown") {
+      requireStaff(interaction);
+      const reason = interaction.options.getString("reason", true).trim();
+      await publishGameMessage("discord-moderation", { action: "SHUTDOWN", reason });
+      await restartUniverseServers();
+      await interaction.reply({ content: `🔄 Restart request sent to all game servers. Reason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔄 **Server Shutdown/Restart**\\nStaff: ${interaction.user.tag}\\nReason: ${reason}`);
+      return;
+    }
+
+    if (interaction.commandName === "serverlock") {
+      requireStaff(interaction);
+      const reason = interaction.options.getString("reason", true).trim();
+      await publishGameMessage("discord-moderation", { action: "SERVERLOCK", reason });
+      await interaction.reply({ content: `🔒 Live game servers are now locked against new joins.\\nReason: ${reason}`, ephemeral: false });
+      await logAction(interaction, `🔒 **Server Lock**\\nStaff: ${interaction.user.tag}\\nReason: ${reason}`);
+      return;
+    }
+
+    if (interaction.commandName === "serverunlock") {
+      requireStaff(interaction);
+      await publishGameMessage("discord-moderation", { action: "SERVERUNLOCK" });
+      await interaction.reply({ content: "🔓 Live game servers have been unlocked.", ephemeral: false });
+      await logAction(interaction, `🔓 **Server Unlock**\\nStaff: ${interaction.user.tag}`);
+      return;
+    }
+
+    if (interaction.commandName === "promote" || interaction.commandName === "demote") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const current = await getCurrentRole(user.id);
+      if (!current?.role) throw new Error("That Roblox user is not currently in the group.");
+
+      const roles = (await listRoles()).sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
+      const index = roles.findIndex(r => String(r.id) === String(current.role.id));
+      const targetIndex = interaction.commandName === "promote" ? index + 1 : index - 1;
+      if (targetIndex < 0 || targetIndex >= roles.length) throw new Error(`Cannot ${interaction.commandName} **${user.name}** any further.`);
+
+      const targetRole = roles[targetIndex];
+      await assignRole(user.id, targetRole.id);
+      const action = interaction.commandName === "promote" ? "PROMOTE" : "DEMOTE";
+      await recordAction(user, action, `${current.role.displayName} → ${targetRole.displayName}`, interaction, { fromRank: current.role.rank, toRank: targetRole.rank });
+      await interaction.reply({ content: `${action === "PROMOTE" ? "⬆️" : "⬇️"} **${user.name}** is now **${targetRole.displayName}** (rank ${targetRole.rank}).`, ephemeral: false });
+      await logAction(interaction, `📋 **${action}**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})\\nNew role: ${targetRole.displayName} (${targetRole.rank})`);
+      return;
+    }
+
+    if (interaction.commandName === "rankinfo") {
+      requireStaff(interaction);
+      const input = interaction.options.getString("rank", true).trim();
+      const roles = await listRoles();
+      const role = /^\d+$/.test(input) ? roles.find(r => String(r.rank) === input) : roles.find(r => String(r.displayName).toLowerCase() === input.toLowerCase());
+      if (!role) throw new Error("Rank not found.");
+      const embed = new EmbedBuilder().setColor(0x8b5cf6).setTitle(`🏷️ Rank Information — ${role.displayName}`).addFields(
+        { name: "Rank number", value: String(role.rank), inline: true },
+        { name: "Members", value: role.memberCount != null ? String(role.memberCount) : "Not provided", inline: true }
+      ).setFooter({ text: `Requested by ${interaction.user.username}` }).setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "rankhistory") {
+      requireStaff(interaction);
+      const user = await getRobloxUser(interaction.options.getString("username", true));
+      const history = await getModerationHistory(user.id);
+      const text = formatHistory(history, e => ["PROMOTE", "DEMOTE", "RANK", "SETRANK"].includes(e.action));
+      const embed = new EmbedBuilder().setColor(0x14b8a6).setTitle(`📈 Rank History — ${user.name}`).setDescription(text).setFooter({ text: `Requested by ${interaction.user.username}` }).setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
     if (interaction.commandName === "pban") {
       requireStaff(interaction);
 
