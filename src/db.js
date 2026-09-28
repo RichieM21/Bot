@@ -1,0 +1,59 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dataDir = process.env.DATA_DIR || path.join(__dirname, "..", "data");
+const file = path.join(dataDir, "users.json");
+
+async function ensure() {
+  await fs.mkdir(dataDir, { recursive: true });
+  try {
+    await fs.access(file);
+  } catch {
+    await fs.writeFile(file, JSON.stringify({ verified: {}, blacklist: {} }, null, 2));
+  }
+}
+
+async function read() {
+  await ensure();
+  return JSON.parse(await fs.readFile(file, "utf8"));
+}
+
+async function write(data) {
+  await fs.writeFile(file, JSON.stringify(data, null, 2));
+}
+
+export async function getVerified(discordId) {
+  const data = await read();
+  return data.verified[discordId] ?? null;
+}
+
+export async function setVerified(discordId, roblox) {
+  const data = await read();
+  data.verified[discordId] = roblox;
+  await write(data);
+}
+
+
+export async function getBlacklistEntry(discordId) {
+  const data = await read();
+  return data.blacklist?.[discordId] ?? null;
+}
+
+export async function isBlacklisted(discordId) {
+  return Boolean(await getBlacklistEntry(discordId));
+}
+
+export async function setBlacklisted(discordId, entry) {
+  const data = await read();
+  data.blacklist ??= {};
+
+  if (entry) {
+    data.blacklist[discordId] = entry;
+  } else {
+    delete data.blacklist[discordId];
+  }
+
+  await write(data);
+}
