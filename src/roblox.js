@@ -156,3 +156,25 @@ export async function getCurrentRole(userId) {
     role
   };
 }
+export async function permanentBanUser(userId, reason) {
+  const universeId = process.env.ROBLOX_UNIVERSE_ID;
+
+  if (!universeId) {
+    throw new Error("ROBLOX_UNIVERSE_ID is not configured.");
+  }
+
+  return robloxFetch(
+    `${API}/cloud/v2/universes/${universeId}/user-restrictions/${userId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        gameJoinRestriction: {
+          active: true,
+          privateReason: reason,
+          displayReason: reason,
+          excludeAltAccounts: false
+        }
+      })
+    }
+  );
+}
