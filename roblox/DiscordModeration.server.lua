@@ -4,7 +4,10 @@
 
 local MessagingService = game:GetService("MessagingService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
+
+local moderationEvent = ReplicatedStorage:WaitForChild("DiscordModerationEvent")
 
 local SERVER_LOCKED = false
 local mutedUntil = {}
@@ -108,15 +111,9 @@ local success, connection = pcall(function()
         elseif action == "UNMUTE" then
             unmute(data.userId)
         elseif action == "ANNOUNCE" then
-            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-            if channel then
-                channel:DisplaySystemMessage("📢 " .. tostring(data.message or ""))
-            end
+            moderationEvent:FireAllClients("ANNOUNCE", tostring(data.message or ""))
         elseif action == "SERVERLOCK" then
             SERVER_LOCKED = true
-            for _, player in ipairs(Players:GetPlayers()) do
-                -- Existing players stay; new joins are blocked.
-            end
         elseif action == "SERVERUNLOCK" then
             SERVER_LOCKED = false
         elseif action == "SHUTDOWN" then
