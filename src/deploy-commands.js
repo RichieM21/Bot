@@ -6,6 +6,15 @@ const commands = [
     .setName("myinfo")
     .setDescription("Show your Roblox, rank, status, and blacklist information."),
 
+  new SlashCommandBuilder()
+    .setName("userinfo")
+    .setDescription("View a player's current punishments. Staff only.")
+    .addUserOption(o =>
+      o.setName("user")
+        .setDescription("Discord user to check")
+        .setRequired(true)
+    ),
+
 
   new SlashCommandBuilder()
     .setName("verify")
