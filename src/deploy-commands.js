@@ -91,6 +91,25 @@ const commands = [
     .setName("roles")
     .setDescription("List the Roblox group roles available to the bot.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+
+    new SlashCommandBuilder()
+    .setName("roles")
+    .setDescription("List the Roblox group roles available to the bot.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+  new SlashCommandBuilder()
+    .setName("pban")
+    .setDescription("Permanently ban a Roblox user from the game.")
+    .addStringOption(o =>
+      o.setName("username")
+        .setDescription("Roblox username to permanently ban")
+        .setRequired(true)
+    )
+    .addStringOption(o =>
+      o.setName("reason")
+        .setDescription("Reason for the permanent ban")
+        .setRequired(true)
+    )
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
