@@ -66,7 +66,8 @@ export async function getDiscordIdByRobloxUserId(userId) {
   );
   return entry?.[0] ?? null;
 }
-\n
+
+
 export async function addModerationAction(userId, action) {
   const data = await read();
   data.moderationHistory ??= {};
