@@ -74,17 +74,20 @@ client.on(Events.InteractionCreate, async interaction => {
   try {
     // Role-name autocomplete
     if (interaction.isAutocomplete()) {
-      if (interaction.commandName !== "rank") return;
+      if (interaction.commandName !== "rank" && interaction.commandName !== "setrank") return;
 
       const focused = interaction.options.getFocused();
       const roles = await listRoles();
 
       const results = roles
         .filter(r => r.displayName)
-        .filter(r => r.displayName.toLowerCase().includes(focused.toLowerCase()))
+        .filter(r =>
+          r.displayName.toLowerCase().includes(focused.toLowerCase()) ||
+          String(r.id).includes(focused)
+        )
         .slice(0, 25)
         .map(r => ({
-          name: `${r.displayName} (rank ${r.rank})`,
+          name: `${r.displayName} (ID ${r.id})`,
           value: r.displayName
         }));
 
@@ -294,7 +297,7 @@ client.on(Events.InteractionCreate, async interaction => {
       requireStaff(interaction);
 
       const username = interaction.options.getString("username", true).trim();
-      const roleName = interaction.options.getString("role", true);
+      const roleInput = interaction.options.getString("role", true).trim();
 
       const user = await getUserByUsername(username);
       if (!user) {
@@ -307,9 +310,13 @@ client.on(Events.InteractionCreate, async interaction => {
         throw new Error(`${user.name} is blacklisted from ranking. Reason: ${blacklist.reason}`);
       }
 
-      const role = await findRoleByName(roleName);
+      const roles = await listRoles();
+      const role = /^\\d+$/.test(roleInput)
+        ? roles.find(r => String(r.id) === roleInput)
+        : await findRoleByName(roleInput);
+
       if (!role) {
-        throw new Error(`Roblox group role "${roleName}" was not found. Use /roles to see the available roles.`);
+        throw new Error(`Roblox group role "${roleInput}" was not found. Enter the rank name or rank ID.`);
       }
 
       await interaction.deferReply({ ephemeral: false });
