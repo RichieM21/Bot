@@ -39,13 +39,15 @@ jobs:
               christmas = date(today.year + 1, 12, 25)
           days = (christmas - today).days
 
+          nl = chr(10)
+
           if days == 0:
-              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\n\n🎁 Hope everyone has an amazing Christmas! ❤️"
+              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄" + nl + nl + "🎁 Hope everyone has an amazing Christmas! ❤️"
           else:
               messages = [
-                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄\n\n🎅 Only **{days} days** until Christmas! 🎁✨\n\n☃️ The countdown is officially on!",
-                  f"🎅 **GOOD MORNING!** 🎅\n\n🎄 **{days} days** until Christmas! 🎁\n\n🔔 Keep spreading the Christmas spirit! ✨",
-                  f"❄️ **Christmas Countdown** ❄️\n\n🎄 **{days} days** to go until Christmas! 🎅🎁\n\n☃️ Who's ready?!"
+                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄{nl}{nl}🎅 Only **{days} days** until Christmas! 🎁✨{nl}{nl}☃️ The countdown is officially on!",
+                  f"🎅 **GOOD MORNING!** 🎅{nl}{nl}🎄 **{days} days** until Christmas! 🎁{nl}{nl}🔔 Keep spreading the Christmas spirit! ✨",
+                  f"❄️ **Christmas Countdown** ❄️{nl}{nl}🎄 **{days} days** to go until Christmas! 🎅🎁{nl}{nl}☃️ Who's ready?!"
               ]
               message = random.choice(messages)
 
