@@ -66,3 +66,31 @@ export async function getDiscordIdByRobloxUserId(userId) {
   );
   return entry?.[0] ?? null;
 }
+\n
+export async function addModerationAction(userId, action) {
+  const data = await read();
+  data.moderationHistory ??= {};
+  data.moderationHistory[String(userId)] ??= [];
+  data.moderationHistory[String(userId)].unshift(action);
+  data.moderationHistory[String(userId)] = data.moderationHistory[String(userId)].slice(0, 100);
+  await write(data);
+}
+
+export async function getModerationHistory(userId) {
+  const data = await read();
+  return data.moderationHistory?.[String(userId)] ?? [];
+}
+
+export async function addStaffNote(userId, note) {
+  const data = await read();
+  data.staffNotes ??= {};
+  data.staffNotes[String(userId)] ??= [];
+  data.staffNotes[String(userId)].unshift(note);
+  data.staffNotes[String(userId)] = data.staffNotes[String(userId)].slice(0, 100);
+  await write(data);
+}
+
+export async function getStaffNotes(userId) {
+  const data = await read();
+  return data.staffNotes?.[String(userId)] ?? [];
+}
