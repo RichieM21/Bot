@@ -2,7 +2,7 @@ services:
   - type: web
     name: roblox-ranking-bot
     runtime: node
-    plan: starter
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
@@ -27,8 +27,3 @@ services:
         sync: false
       - key: LOG_CHANNEL_ID
         sync: false
-
-    disk:
-      name: roblox-ranking-data
-      mountPath: /var/data
-      sizeGB: 1
