@@ -65,10 +65,10 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("setrank")
-    .setDescription("Set a verified Roblox user's group rank.")
-    .addUserOption(o =>
-      o.setName("user")
-        .setDescription("Discord user to rank")
+    .setDescription("Set a Roblox user's group rank.")
+    .addStringOption(o =>
+      o.setName("username")
+        .setDescription("Roblox username to rank")
         .setRequired(true)
     )
     .addStringOption(o =>
