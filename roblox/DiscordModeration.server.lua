@@ -113,7 +113,8 @@ local success, connection = pcall(function()
         elseif action == "ANNOUNCE" then
             adminNotify:FireAllClients({
                 type = "announce",
-                message = tostring(data.message or "")
+                message = tostring(data.message or ""),
+                executorName = "SYSTEM"
             })
         elseif action == "SERVERLOCK" then
             SERVER_LOCKED = true
