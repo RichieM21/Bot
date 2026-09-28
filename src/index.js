@@ -67,6 +67,8 @@ async function logAction(interaction, text) {
   }
 }
 
+process.env.TZ = "America/New_York";
+
 const CHRISTMAS_CHANNEL_ID = "1430731225944821842";
 
 function getChristmasCountdown() {
