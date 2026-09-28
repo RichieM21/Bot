@@ -41,21 +41,38 @@ jobs:
 
           if days == 0:
               title = "🎄🎅 MERRY CHRISTMAS! 🎅🎄"
-              description = "🎁 Hope everyone has an amazing Christmas! ❤️" + chr(10) + chr(10) + "☃️ Enjoy the holiday and spread the Christmas spirit!"
+              description = "🎁 **Christmas is finally here!** ❤️" + chr(10) + chr(10) + "☃️ Hope everyone has an amazing Christmas filled with fun, food, family, friends, and plenty of Christmas spirit! ✨"
+              color = 16711680
+              countdown_label = "🎁 It's Christmas!"
           else:
               messages = [
-                  ("🎅 GOOD MORNING! 🎅", f"🎄 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "✨ The countdown is officially on!"),
-                  ("🎄 CHRISTMAS COUNTDOWN! 🎄", f"🎅 Only **{days} days** until Christmas! 🎁✨" + chr(10) + chr(10) + "☃️ Who's ready?!"),
-                  ("❄️ Christmas Countdown ❄️", f"🎄 **{days} days** to go until Christmas! 🎅🎁" + chr(10) + chr(10) + "🔔 Keep spreading the Christmas spirit!")
+                  (
+                      "🎄✨ CHRISTMAS COUNTDOWN ✨🎄",
+                      f"🎅 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "☃️ The countdown is officially on!" + chr(10) + "🔔 Get ready for the most wonderful time of the year! ❤️"
+                  ),
+                  (
+                      "🎅🎄 GOOD MORNING! 🎄🎅",
+                      f"✨ There are **{days} days** left until Christmas! 🎁" + chr(10) + chr(10) + "☃️ Keep spreading the Christmas spirit!" + chr(10) + "🎁 Santa is getting closer... 👀"
+                  ),
+                  (
+                      "❄️🎄 CHRISTMAS IS COMING! 🎄❄️",
+                      f"🎁 Only **{days} days** to go! 🎅" + chr(10) + chr(10) + "✨ Time to get into the Christmas spirit!" + chr(10) + "☃️ Who's ready?! ❤️"
+                  )
               ]
               title, description = random.choice(messages)
+              color = 16711680
+              countdown_label = f"🎄 {days} days remaining"
 
           embed = {
               "title": title,
               "description": description,
-              "color": 16711680,
-              "footer": {"text": "🎅 Christmas Countdown • See you Christmas morning!"},
-              "timestamp": datetime.now(ZoneInfo("America/New_York")).isoformat()
+              "color": color,
+              "fields": [
+                  {"name": "⏰ Countdown", "value": countdown_label, "inline": True},
+                  {"name": "📅 Christmas Day", "value": "December 25 🎁", "inline": True}
+              ],
+              "footer": {"text": "🎅 Christmas Countdown • New message every morning at 1:05 AM ET"},
+              "timestamp": eastern_now.isoformat()
           }
 
           token = os.environ["DISCORD_TOKEN"]
