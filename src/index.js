@@ -293,17 +293,18 @@ client.on(Events.InteractionCreate, async interaction => {
     if (interaction.commandName === "setrank") {
       requireStaff(interaction);
 
-      const target = interaction.options.getUser("user", true);
+      const username = interaction.options.getString("username", true).trim();
       const roleName = interaction.options.getString("role", true);
 
-      const blacklist = await getBlacklistEntry(target.id);
-      if (blacklist) {
-        throw new Error(`${target.username} is blacklisted from ranking. Reason: ${blacklist.reason}`);
+      const user = await getUserByUsername(username);
+      if (!user) {
+        throw new Error("Roblox username not found.");
       }
 
-      const verified = await getVerified(target.id);
-      if (!verified) {
-        throw new Error(`${target.username} has not linked a Roblox account. They need to use /verify first.`);
+      const linkedDiscordId = await getDiscordIdByRobloxUserId(user.id);
+      const blacklist = linkedDiscordId ? await getBlacklistEntry(linkedDiscordId) : null;
+      if (blacklist) {
+        throw new Error(`${user.name} is blacklisted from ranking. Reason: ${blacklist.reason}`);
       }
 
       const role = await findRoleByName(roleName);
@@ -311,16 +312,16 @@ client.on(Events.InteractionCreate, async interaction => {
         throw new Error(`Roblox group role "${roleName}" was not found. Use /roles to see the available roles.`);
       }
 
-      await interaction.deferReply({ ephemeral: true });
-      await assignRole(verified.userId, role.id);
+      await interaction.deferReply({ ephemeral: false });
+      await assignRole(user.id, role.id);
 
       await interaction.editReply(
-        `✅ Set **${verified.username}** to **${role.displayName}** (rank ${role.rank}).`
+        `✅ Set **${user.name}** to **${role.displayName}** (rank ${role.rank}).`
       );
 
       await logAction(
         interaction,
-        `📋 **Set Rank**\nStaff: ${interaction.user.tag}\nTarget: ${target.tag}\nRoblox: ${verified.username} (${verified.userId})\nNew role: ${role.displayName} (${role.id})`
+        `📋 **Set Rank**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nNew role: ${role.displayName} (${role.id})`
       );
       return;
     }
