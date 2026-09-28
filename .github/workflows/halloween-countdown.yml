@@ -2,22 +2,14 @@ name: Halloween Countdown
 
 on:
   schedule:
-    - cron: "5 6 * * *"
-      timezone: "America/New_York"
+    - cron: "5 10 * * *"
   workflow_dispatch:
 
 jobs:
   halloween-countdown:
     runs-on: ubuntu-latest
     steps:
-      - name: Check Eastern Time
-        id: time
-        run: |
-          HOUR=$(TZ=America/New_York date +%H)
-          echo "hour=$HOUR" >> "$GITHUB_OUTPUT"
-
       - name: Send countdown
-        if: steps.time.outputs.hour == '06' || github.event_name == 'workflow_dispatch'
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: "1430731225944821842"
