@@ -94,3 +94,12 @@ export async function getStaffNotes(userId) {
   const data = await read();
   return data.staffNotes?.[String(userId)] ?? [];
 }
+
+export async function clearWarnings(userId) {
+  const data = await read();
+  const key = String(userId);
+  const history = data.moderationHistory?.[key] ?? [];
+  data.moderationHistory ??= {};
+  data.moderationHistory[key] = history.filter(entry => entry.action !== "WARN");
+  await write(data);
+}
