@@ -2,7 +2,8 @@ name: Christmas Countdown
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "15 0 * * *"
+      timezone: "America/New_York"
   workflow_dispatch:
 
 jobs:
@@ -33,24 +34,18 @@ jobs:
           eastern_now = datetime.now(ZoneInfo("America/New_York"))
           today = eastern_now.date()
 
-          # Scheduled runs send during the first 15 minutes after midnight.
-          # Manual runs send immediately for testing/today's countdown.
-          if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" and not (15 <= eastern_now.minute < 25):
-              print("Outside the midnight send window; skipping.")
-              raise SystemExit(0)
-
           christmas = date(today.year, 12, 25)
           if today >= christmas:
               christmas = date(today.year + 1, 12, 25)
           days = (christmas - today).days
 
           if days == 0:
-              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\\n\\n🎁 Hope everyone has an amazing Christmas! ❤️"
+              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\n\n🎁 Hope everyone has an amazing Christmas! ❤️"
           else:
               messages = [
-                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄\\n\\n🎅 Only **{days} days** until Christmas! 🎁✨\\n\\n☃️ The countdown is officially on!",
-                  f"🎅 **GOOD MORNING!** 🎅\\n\\n🎄 **{days} days** until Christmas! 🎁\\n\\n🔔 Keep spreading the Christmas spirit! ✨",
-                  f"❄️ **Christmas Countdown** ❄️\\n\\n🎄 **{days} days** to go until Christmas! 🎅🎁\\n\\n☃️ Who's ready?!"
+                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄\n\n🎅 Only **{days} days** until Christmas! 🎁✨\n\n☃️ The countdown is officially on!",
+                  f"🎅 **GOOD MORNING!** 🎅\n\n🎄 **{days} days** until Christmas! 🎁\n\n🔔 Keep spreading the Christmas spirit! ✨",
+                  f"❄️ **Christmas Countdown** ❄️\n\n🎄 **{days} days** to go until Christmas! 🎅🎁\n\n☃️ Who's ready?!"
               ]
               message = random.choice(messages)
 
