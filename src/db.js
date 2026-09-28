@@ -57,3 +57,12 @@ export async function setBlacklisted(discordId, entry) {
 
   await write(data);
 }
+
+
+export async function getDiscordIdByRobloxUserId(userId) {
+  const data = await read();
+  const entry = Object.entries(data.verified ?? {}).find(
+    ([, roblox]) => String(roblox.userId) === String(userId)
+  );
+  return entry?.[0] ?? null;
+}
