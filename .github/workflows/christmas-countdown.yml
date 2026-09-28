@@ -63,6 +63,9 @@ jobs:
               ]
               message = random.choice(messages)
 
+          # Normalize any escaped newline text before sending.
+          message = message.replace("\\n", "\n")
+
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
           req = urllib.request.Request(
