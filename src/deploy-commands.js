@@ -3,6 +3,11 @@ import { REST, Routes, SlashCommandBuilder, PermissionFlagsBits } from "discord.
 
 const commands = [
   new SlashCommandBuilder()
+    .setName("myinfo")
+    .setDescription("Show your Roblox, rank, status, and blacklist information."),
+
+
+  new SlashCommandBuilder()
     .setName("verify")
     .setDescription("Link your Discord account to a Roblox account.")
     .addStringOption(o =>
