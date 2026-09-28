@@ -2,8 +2,7 @@ name: Christmas Countdown
 
 on:
   schedule:
-    - cron: "12 4 * * *"
-    - cron: "12 5 * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -14,7 +13,11 @@ jobs:
         id: time
         run: |
           HOUR=$(TZ=America/New_York date +%H)
+          MINUTE=$(TZ=America/New_York date +%M)
+          DATE=$(TZ=America/New_York date +%Y-%m-%d)
           echo "hour=$HOUR" >> "$GITHUB_OUTPUT"
+          echo "minute=$MINUTE" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
 
       - name: Send countdown
         if: steps.time.outputs.hour == '00'
@@ -27,11 +30,19 @@ jobs:
           from datetime import date, datetime
           from zoneinfo import ZoneInfo
 
-          eastern = datetime.now(ZoneInfo("America/New_York")).date()
-          christmas = date(eastern.year, 12, 25)
-          if eastern >= christmas:
-              christmas = date(eastern.year + 1, 12, 25)
-          days = (christmas - eastern).days
+          eastern_now = datetime.now(ZoneInfo("America/New_York"))
+          today = eastern_now.date()
+
+          # Only send during the first 15-minute window after midnight.
+          # This makes the workflow resilient to GitHub's schedule delays.
+          if eastern_now.minute >= 15:
+              print("Outside the midnight send window; skipping.")
+              raise SystemExit(0)
+
+          christmas = date(today.year, 12, 25)
+          if today >= christmas:
+              christmas = date(today.year + 1, 12, 25)
+          days = (christmas - today).days
 
           if days == 0:
               message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\\n\\n🎁 Hope everyone has an amazing Christmas! ❤️"
