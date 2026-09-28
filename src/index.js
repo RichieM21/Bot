@@ -312,11 +312,11 @@ client.on(Events.InteractionCreate, async interaction => {
 
       const roles = await listRoles();
       const role = /^\\d+$/.test(roleInput)
-        ? roles.find(r => String(r.id) === roleInput || String(r.rank) === roleInput)
+        ? roles.find(r => String(r.rank) === roleInput)
         : await findRoleByName(roleInput);
 
       if (!role) {
-        throw new Error(`Roblox group role "${roleInput}" was not found. Enter the rank name or rank ID.`);
+        throw new Error(`Roblox group role "${roleInput}" was not found. Enter the rank name or rank number.`);
       }
 
       await interaction.deferReply({ ephemeral: false });
