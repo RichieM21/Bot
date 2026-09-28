@@ -113,7 +113,7 @@ client.on(Events.InteractionCreate, async interaction => {
         .filter(r => r.displayName)
         .filter(r =>
           r.displayName.toLowerCase().includes(focused.toLowerCase()) ||
-          String(r.id).includes(focused)
+          String(r.rank).includes(focused)
         )
         .slice(0, 25)
         .map(r => ({
