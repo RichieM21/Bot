@@ -20,7 +20,7 @@ jobs:
           echo "date=$DATE" >> "$GITHUB_OUTPUT"
 
       - name: Send countdown
-        if: steps.time.outputs.hour == '00'
+        if: steps.time.outputs.hour == '00' || github.event_name == 'workflow_dispatch'
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: "1430731225944821842"
@@ -33,9 +33,9 @@ jobs:
           eastern_now = datetime.now(ZoneInfo("America/New_York"))
           today = eastern_now.date()
 
-          # Only send during the first 15-minute window after midnight.
-          # This makes the workflow resilient to GitHub's schedule delays.
-          if eastern_now.minute >= 15:
+          # Scheduled runs send during the first 15 minutes after midnight.
+          # Manual runs send immediately for testing/today's countdown.
+          if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" and eastern_now.minute >= 15:
               print("Outside the midnight send window; skipping.")
               raise SystemExit(0)
 
