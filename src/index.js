@@ -121,7 +121,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await interaction.reply({
         content: `✅ Verified **${profile.name}** and linked it to your Discord account.`,
-        ephemeral: true
+        ephemeral: false
       });
       return;
     }
@@ -143,7 +143,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
         await interaction.reply({
           content: `🚫 **${target.username}** has been blacklisted from Roblox ranking.\nReason: ${reason}`,
-          ephemeral: true
+          ephemeral: false
         });
 
         await logAction(
@@ -155,7 +155,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
         await interaction.reply({
           content: `✅ **${target.username}** has been removed from the ranking blacklist.`,
-          ephemeral: true
+          ephemeral: false
         });
 
         await logAction(
@@ -212,7 +212,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await interaction.reply({
         content: text.slice(0, 1900) || "No roles found.",
-        ephemeral: true
+        ephemeral: false
       });
       return;
     }
@@ -230,14 +230,14 @@ client.on(Events.InteractionCreate, async interaction => {
       if (!current) {
         await interaction.reply({
           content: `**${verified.username}** is not currently a member of the Roblox group.`,
-          ephemeral: true
+          ephemeral: false
         });
         return;
       }
 
       await interaction.reply({
         content: `**${verified.username}** — **${current.role.displayName}** (rank ${current.role.rank})`,
-        ephemeral: true
+        ephemeral: false
       });
       return;
     }
@@ -263,7 +263,7 @@ client.on(Events.InteractionCreate, async interaction => {
         throw new Error(`Roblox group role "${roleName}" was not found. Use /roles to see the available roles.`);
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ ephemeral: false });
       await assignRole(verified.userId, role.id);
 
       await interaction.editReply(
@@ -287,7 +287,7 @@ client.on(Events.InteractionCreate, async interaction => {
         throw new Error(`${target.username} has not linked a Roblox account.`);
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ ephemeral: false });
       await unassignHighestRole(verified.userId);
 
       await interaction.editReply(
@@ -308,7 +308,7 @@ client.on(Events.InteractionCreate, async interaction => {
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply({ content }).catch(() => {});
     } else {
-      await interaction.reply({ content, ephemeral: true }).catch(() => {});
+      await interaction.reply({ content, ephemeral: false }).catch(() => {});
     }
   }
 });
