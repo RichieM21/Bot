@@ -127,7 +127,7 @@ const commands = [
       o.setName("username")
         .setDescription("Roblox username to unban")
         .setRequired(true)
-    )
+    ),
 
   new SlashCommandBuilder()
     .setName("warn")
