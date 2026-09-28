@@ -119,7 +119,7 @@ async function sendChristmasCountdown() {
 function scheduleChristmasCountdown() {
   const now = new Date();
   const next = new Date(now);
-  next.setHours(8, 0, 0, 0);
+  next.setHours(0, 0, 0, 0);
 
   if (next <= now) {
     next.setDate(next.getDate() + 1);
