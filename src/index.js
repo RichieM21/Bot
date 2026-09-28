@@ -20,7 +20,7 @@ import {
   getUserRestriction
 } from "./roblox.js";
 
-import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry } from "./db.js";
+import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry, getDiscordIdByRobloxUserId } from "./db.js";
 
 const required = [
   "DISCORD_TOKEN",
@@ -140,8 +140,8 @@ client.on(Events.InteractionCreate, async interaction => {
         ? `🔴 **Currently game banned**\n**Reason:** ${restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided."}`
         : "🟢 Not currently game banned.";
 
-      const linked = await getVerified(interaction.user.id);
-      const blacklist = await getBlacklistEntry(interaction.user.id);
+      const linkedDiscordId = await getDiscordIdByRobloxUserId(user.id);
+      const blacklist = linkedDiscordId ? await getBlacklistEntry(linkedDiscordId) : null;
 
       const embed = new EmbedBuilder()
         .setColor(0xef4444)
@@ -149,7 +149,7 @@ client.on(Events.InteractionCreate, async interaction => {
         .addFields(
           { name: "Roblox account", value: `👤 **Username:** ${user.name}\n🆔 **User ID:** ${user.id}` },
           { name: "Game ban", value: banInfo },
-          { name: "Staff blacklist", value: "Use the Roblox username's linked Discord account to check the staff blacklist." }
+          { name: "Staff blacklist", value: blacklist ? `🔴 **Staff blacklisted**\n**Reason:** ${blacklist.reason || "No reason provided."}` : "🟢 Not staff blacklisted." }
         )
         .setFooter({ text: `Requested by ${interaction.user.username}` })
         .setTimestamp();
