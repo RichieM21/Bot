@@ -40,20 +40,29 @@ jobs:
           days = (christmas - today).days
 
           if days == 0:
-              message = "🎄🎅 **MERRY CHRISTMAS!** 🎅🎄" + chr(10) + chr(10) + "🎁 Hope everyone has an amazing Christmas! ❤️"
+              title = "🎄🎅 MERRY CHRISTMAS! 🎅🎄"
+              description = "🎁 Hope everyone has an amazing Christmas! ❤️" + chr(10) + chr(10) + "☃️ Enjoy the holiday and spread the Christmas spirit!"
           else:
               messages = [
-                  f"🎄 **CHRISTMAS COUNTDOWN!** 🎄" + chr(10) + chr(10) + f"🎅 Only **{days} days** until Christmas! 🎁✨" + chr(10) + chr(10) + "☃️ The countdown is officially on!",
-                  f"🎅 **GOOD MORNING!** 🎅" + chr(10) + chr(10) + f"🎄 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "🔔 Keep spreading the Christmas spirit! ✨",
-                  f"❄️ **Christmas Countdown** ❄️" + chr(10) + chr(10) + f"🎄 **{days} days** to go until Christmas! 🎅🎁" + chr(10) + chr(10) + "☃️ Who's ready?!"
+                  ("🎅 GOOD MORNING! 🎅", f"🎄 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "✨ The countdown is officially on!"),
+                  ("🎄 CHRISTMAS COUNTDOWN! 🎄", f"🎅 Only **{days} days** until Christmas! 🎁✨" + chr(10) + chr(10) + "☃️ Who's ready?!"),
+                  ("❄️ Christmas Countdown ❄️", f"🎄 **{days} days** to go until Christmas! 🎅🎁" + chr(10) + chr(10) + "🔔 Keep spreading the Christmas spirit!")
               ]
-              message = random.choice(messages)
+              title, description = random.choice(messages)
+
+          embed = {
+              "title": title,
+              "description": description,
+              "color": 16711680,
+              "footer": {"text": "🎅 Christmas Countdown • See you Christmas morning!"},
+              "timestamp": datetime.now(ZoneInfo("America/New_York")).isoformat()
+          }
 
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
           req = urllib.request.Request(
               f"https://discord.com/api/v10/channels/{channel}/messages",
-              data=json.dumps({"content": message}).encode(),
+              data=json.dumps({"embeds": [embed]}).encode(),
               headers={
                   "Authorization": f"Bot {token}",
                   "Content-Type": "application/json",
