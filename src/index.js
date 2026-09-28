@@ -167,7 +167,7 @@ client.on(Events.InteractionCreate, async interaction => {
       let statusInfo = "🟢 No active game restriction.";
 
       if (verified) {
-        robloxInfo = `👤 **Username:** ${verified.username}\\n🆔 **User ID:** ${verified.userId}`;
+        robloxInfo = `👤 **Username:** ${verified.username}\n🆔 **User ID:** ${verified.userId}`;
 
         const current = await getCurrentRole(verified.userId);
         if (current?.role) {
@@ -177,7 +177,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const restriction = await getUserRestriction(verified.userId);
         if (restriction?.gameJoinRestriction?.active) {
           const reason = restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided.";
-          statusInfo = `🔴 Active game restriction\\n**Reason:** ${reason}`;
+          statusInfo = `🔴 Active game restriction\n**Reason:** ${reason}`;
         }
       }
 
@@ -188,7 +188,7 @@ client.on(Events.InteractionCreate, async interaction => {
         .addFields(
           { name: "Roblox information", value: robloxInfo },
           { name: "Game status", value: statusInfo },
-          { name: "Blacklist information", value: blacklist ? `🔴 Staff blacklisted\\n**Reason:** ${blacklist.reason || "No reason provided."}` : "🟢 Not staff blacklisted." },
+          { name: "Blacklist information", value: blacklist ? `🔴 Staff blacklisted\n**Reason:** ${blacklist.reason || "No reason provided."}` : "🟢 Not staff blacklisted." },
           { name: "Group rank", value: rankInfo }
         )
         .setFooter({ text: `Requested by ${interaction.user.username}` })
@@ -244,7 +244,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await logAction(
         interaction,
-        `✅ **Roblox Unban**\\nStaff: ${interaction.user.tag}\\nRoblox: ${user.name} (${user.id})`
+        `✅ **Roblox Unban**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})`
       );
 
       return;
