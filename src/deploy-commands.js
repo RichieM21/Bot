@@ -9,9 +9,9 @@ const commands = [
   new SlashCommandBuilder()
     .setName("userinfo")
     .setDescription("View a player's current punishments. Staff only.")
-    .addUserOption(o =>
-      o.setName("user")
-        .setDescription("Discord user to check")
+    .addStringOption(o =>
+      o.setName("username")
+        .setDescription("Roblox username to check")
         .setRequired(true)
     ),
 
