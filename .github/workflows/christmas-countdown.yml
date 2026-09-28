@@ -41,22 +41,18 @@ jobs:
 
           if days == 0:
               message = """🎄🎅 **MERRY CHRISTMAS!** 🎅🎄
-
 🎁 Hope everyone has an amazing Christmas! ❤️"""
           else:
               messages = [
                   f"""🎄 **CHRISTMAS COUNTDOWN!** 🎄
-
 🎅 Only **{days} days** until Christmas! 🎁✨
 
 ☃️ The countdown is officially on!""",
                   f"""🎅 **GOOD MORNING!** 🎅
-
 🎄 **{days} days** until Christmas! 🎁
 
 🔔 Keep spreading the Christmas spirit! ✨""",
                   f"""❄️ **Christmas Countdown** ❄️
-
 🎄 **{days} days** to go until Christmas! 🎅🎁
 
 ☃️ Who's ready?!"""
