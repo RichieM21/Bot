@@ -17,10 +17,13 @@ import {
   getCurrentRole,
   permanentBanUser,
   unbanUser,
-  getUserRestriction
+  getUserRestriction,
+  temporaryBanUser,
+  publishGameMessage,
+  restartUniverseServers
 } from "./roblox.js";
 
-import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry, getDiscordIdByRobloxUserId } from "./db.js";
+import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry, getDiscordIdByRobloxUserId, addModerationAction, getModerationHistory, clearWarnings, addStaffNote, getStaffNotes } from "./db.js";
 
 const required = [
   "DISCORD_TOKEN",
@@ -69,6 +72,33 @@ async function logAction(interaction, text) {
 }
 
 
+async function getRobloxUser(username) {
+  const user = await getUserByUsername(String(username).trim());
+  if (!user) throw new Error("Roblox username not found.");
+  return user;
+}
+
+async function recordAction(user, action, reason, interaction, extra = {}) {
+  await addModerationAction(user.id, {
+    action,
+    reason: reason || "",
+    username: user.name,
+    userId: String(user.id),
+    staffId: interaction.user.id,
+    staffTag: interaction.user.tag,
+    timestamp: new Date().toISOString(),
+    ...extra
+  });
+}
+
+function formatHistory(entries, filter = null) {
+  const items = filter ? entries.filter(filter) : entries;
+  if (!items.length) return "No moderation history found.";
+  return items.slice(0, 15).map((entry, i) => {
+    const date = new Date(entry.timestamp).toLocaleString();
+    return `**${i + 1}. ${entry.action}** — ${entry.reason || "No reason"}\\nStaff: ${entry.staffTag || entry.staffId || "Unknown"}\\n${date}`;
+  }).join("\\n\\n");
+}
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
