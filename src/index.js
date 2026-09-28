@@ -154,7 +154,7 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
 
-    if (interaction.commandName === "unban") {
+    if (interaction.commandName === "unpban") {
       requireStaff(interaction);
 
       const username = interaction.options.getString("username", true).trim();
