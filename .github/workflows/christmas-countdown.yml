@@ -10,18 +10,7 @@ jobs:
   christmas-countdown:
     runs-on: ubuntu-latest
     steps:
-      - name: Check Eastern Time
-        id: time
-        run: |
-          HOUR=$(TZ=America/New_York date +%H)
-          MINUTE=$(TZ=America/New_York date +%M)
-          DATE=$(TZ=America/New_York date +%Y-%m-%d)
-          echo "hour=$HOUR" >> "$GITHUB_OUTPUT"
-          echo "minute=$MINUTE" >> "$GITHUB_OUTPUT"
-          echo "date=$DATE" >> "$GITHUB_OUTPUT"
-
       - name: Send countdown
-        if: steps.time.outputs.hour == '01' || github.event_name == 'workflow_dispatch'
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: "1430731225944821842"
