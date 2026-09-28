@@ -2,8 +2,8 @@ name: Christmas Countdown
 
 on:
   schedule:
-    - cron: "10 0 * * *"
-      timezone: "America/New_York"
+    - cron: "10 4 * * *"
+    - cron: "10 5 * * *"
   workflow_dispatch:
 
 jobs:
@@ -14,9 +14,7 @@ jobs:
         id: time
         run: |
           HOUR=$(TZ=America/New_York date +%H)
-          DATE=$(TZ=America/New_York date +%Y-%m-%d)
           echo "hour=$HOUR" >> "$GITHUB_OUTPUT"
-          echo "date=$DATE" >> "$GITHUB_OUTPUT"
 
       - name: Send countdown
         if: steps.time.outputs.hour == '00'
