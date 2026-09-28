@@ -129,38 +129,27 @@ client.on(Events.InteractionCreate, async interaction => {
         if (interaction.commandName === "userinfo") {
       requireStaff(interaction);
 
-      const target = interaction.options.getUser("user", true);
-      const verified = await getVerified(target.id);
-
-      let robloxInfo = "❌ No Roblox account is linked.";
-      let banInfo = "🟢 Not currently game banned.";
-      let blacklistInfo = "🟢 Not staff blacklisted.";
-
-      if (verified) {
-        robloxInfo = `👤 **Username:** ${verified.username}\n🆔 **User ID:** ${verified.userId}`;
-
-        const restriction = await getUserRestriction(verified.userId);
-        if (restriction?.gameJoinRestriction?.active) {
-          const reason =
-            restriction.gameJoinRestriction.displayReason ||
-            restriction.gameJoinRestriction.privateReason ||
-            "No reason provided.";
-          banInfo = `🔴 **Currently game banned**\n**Reason:** ${reason}`;
-        }
+      const username = interaction.options.getString("username", true).trim();
+      const user = await getUserByUsername(username);
+      if (!user) {
+        throw new Error("Roblox username not found.");
       }
 
-      const blacklist = await getBlacklistEntry(target.id);
-      if (blacklist) {
-        blacklistInfo = `🔴 **Staff blacklisted**\n**Reason:** ${blacklist.reason || "No reason provided."}`;
-      }
+      const restriction = await getUserRestriction(user.id);
+      const banInfo = restriction?.gameJoinRestriction?.active
+        ? `🔴 **Currently game banned**\n**Reason:** ${restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided."}`
+        : "🟢 Not currently game banned.";
+
+      const linked = await getVerified(interaction.user.id);
+      const blacklist = await getBlacklistEntry(interaction.user.id);
 
       const embed = new EmbedBuilder()
         .setColor(0xef4444)
-        .setTitle(`🔨 Punishments — ${target.username}`)
+        .setTitle(`🔨 Punishments — ${user.name}`)
         .addFields(
-          { name: "Roblox account", value: robloxInfo },
+          { name: "Roblox account", value: `👤 **Username:** ${user.name}\n🆔 **User ID:** ${user.id}` },
           { name: "Game ban", value: banInfo },
-          { name: "Staff blacklist", value: blacklistInfo }
+          { name: "Staff blacklist", value: "Use the Roblox username's linked Discord account to check the staff blacklist." }
         )
         .setFooter({ text: `Requested by ${interaction.user.username}` })
         .setTimestamp();
