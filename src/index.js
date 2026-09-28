@@ -16,7 +16,8 @@ import {
   unassignHighestRole,
   getCurrentRole,
   permanentBanUser,
-  unbanUser
+  unbanUser,
+  getUserRestriction
 } from "./roblox.js";
 
 import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry } from "./db.js";
@@ -125,7 +126,47 @@ client.on(Events.InteractionCreate, async interaction => {
       });
       return;
     }
-        if (interaction.commandName === "pban") {
+        if (interaction.commandName === "myinfo") {
+      const verified = await getVerified(interaction.user.id);
+      const blacklist = await getBlacklistEntry(interaction.user.id);
+
+      let robloxInfo = "❌ No Roblox account is linked.";
+      let rankInfo = "❌ No Roblox group rank available.";
+      let statusInfo = "🟢 No active game restriction.";
+
+      if (verified) {
+        robloxInfo = `👤 **Username:** ${verified.username}\\n🆔 **User ID:** ${verified.userId}`;
+
+        const current = await getCurrentRole(verified.userId);
+        if (current?.role) {
+          rankInfo = `🏷️ **${current.role.displayName}** (rank ${current.role.rank})`;
+        }
+
+        const restriction = await getUserRestriction(verified.userId);
+        if (restriction?.gameJoinRestriction?.active) {
+          const reason = restriction.gameJoinRestriction.displayReason || restriction.gameJoinRestriction.privateReason || "No reason provided.";
+          statusInfo = `🔴 Active game restriction\\n**Reason:** ${reason}`;
+        }
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(0x8b5cf6)
+        .setTitle("🪐 Your information")
+        .setDescription("Current information available for your account.")
+        .addFields(
+          { name: "Roblox information", value: robloxInfo },
+          { name: "Game status", value: statusInfo },
+          { name: "Blacklist information", value: blacklist ? `🔴 Staff blacklisted\\n**Reason:** ${blacklist.reason || "No reason provided."}` : "🟢 Not staff blacklisted." },
+          { name: "Group rank", value: rankInfo }
+        )
+        .setFooter({ text: `Requested by ${interaction.user.username}` })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "pban") {
       requireStaff(interaction);
 
       const username = interaction.options.getString("username", true).trim();
