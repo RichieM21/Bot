@@ -1,0 +1,17 @@
+{
+  "name": "roblox-discord-ranking-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.25.0",
+    "dotenv": "^17.2.2"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  }
+}
