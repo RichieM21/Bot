@@ -87,11 +87,6 @@ const commands = [
         .setRequired(false)
     ),
 
-  new SlashCommandBuilder()
-    .setName("roles")
-    .setDescription("List the Roblox group roles available to the bot.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-
     new SlashCommandBuilder()
     .setName("roles")
     .setDescription("List the Roblox group roles available to the bot.")
@@ -110,7 +105,6 @@ const commands = [
         .setDescription("Reason for the permanent ban")
         .setRequired(true)
     )
-];
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
