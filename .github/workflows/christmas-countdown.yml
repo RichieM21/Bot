@@ -2,7 +2,7 @@ name: Christmas Countdown
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
 
           # Scheduled runs send during the first 15 minutes after midnight.
           # Manual runs send immediately for testing/today's countdown.
-          if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" and eastern_now.minute >= 15:
+          if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" and not (15 <= eastern_now.minute < 25):
               print("Outside the midnight send window; skipping.")
               raise SystemExit(0)
 
