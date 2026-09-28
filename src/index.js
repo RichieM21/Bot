@@ -67,79 +67,7 @@ async function logAction(interaction, text) {
   }
 }
 
-process.env.TZ = "America/New_York";
 
-const CHRISTMAS_CHANNEL_ID = "1430731225944821842";
-
-function getChristmasCountdown() {
-  const now = new Date();
-  const year = now.getFullYear();
-  let christmas = new Date(`${year}-12-25T00:00:00`);
-  if (now >= christmas) {
-    christmas = new Date(`${year + 1}-12-25T00:00:00`);
-  }
-
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const christmasDay = new Date(
-    christmas.getFullYear(),
-    christmas.getMonth(),
-    christmas.getDate()
-  );
-
-  return Math.ceil((christmasDay - today) / 86400000);
-}
-
-async function sendChristmasCountdown() {
-  try {
-    const channel = await client.channels.fetch(CHRISTMAS_CHANNEL_ID);
-    if (!channel?.isTextBased()) {
-      console.error("Christmas countdown channel is not a text channel.");
-      return;
-    }
-
-    const days = getChristmasCountdown();
-
-    if (days === 0) {
-      await channel.send("🎄🎅 **MERRY CHRISTMAS!** 🎅🎄\\n\\n🎁 Hope everyone has an amazing Christmas! ❤️");
-    } else {
-      const messages = [
-        `🎄 **CHRISTMAS COUNTDOWN!** 🎄\\n\\n🎅 Only **${days} days** until Christmas! 🎁✨\\n\\n☃️ The countdown is officially on!`,
-        `🎅 **GOOD MORNING!** 🎅\\n\\n🎄 **${days} days** until Christmas! 🎁\\n\\n🔔 Keep spreading the Christmas spirit! ✨`,
-        `❄️ **Christmas Countdown** ❄️\\n\\n🎄 **${days} days** to go until Christmas! 🎅🎁\\n\\n☃️ Who's ready?!`
-      ];
-
-      const message = messages[Math.floor(Math.random() * messages.length)];
-      await channel.send(message);
-    }
-
-    console.log(`Christmas countdown sent: ${days} days remaining.`);
-  } catch (error) {
-    console.error("Could not send Christmas countdown:", error);
-  }
-}
-
-function scheduleChristmasCountdown() {
-  const now = new Date();
-  const next = new Date(now);
-  next.setHours(0, 0, 0, 0);
-
-  if (next <= now) {
-    next.setDate(next.getDate() + 1);
-  }
-
-  const delay = next.getTime() - now.getTime();
-  setTimeout(async () => {
-    await sendChristmasCountdown();
-    scheduleChristmasCountdown();
-  }, delay);
-
-  console.log(`Next Christmas countdown scheduled for ${next.toString()}`);
-}
-
-client.once(Events.ClientReady, ready => {
-  console.log(`Logged in as ${ready.user.tag}`);
-  scheduleChristmasCountdown();
-});
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
