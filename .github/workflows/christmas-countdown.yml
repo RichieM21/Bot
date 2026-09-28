@@ -2,7 +2,7 @@ name: Christmas Countdown
 
 on:
   schedule:
-    - cron: "0 1 * * *"
+    - cron: "5 1 * * *"
       timezone: "America/New_York"
   workflow_dispatch:
 
