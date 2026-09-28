@@ -87,7 +87,7 @@ client.on(Events.InteractionCreate, async interaction => {
         )
         .slice(0, 25)
         .map(r => ({
-          name: `${r.displayName} (ID ${r.id})`,
+          name: `${r.displayName} (rank ${r.rank})`,
           value: r.displayName
         }));
 
