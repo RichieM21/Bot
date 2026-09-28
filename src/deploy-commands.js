@@ -40,7 +40,7 @@ const commands = [
     )
     .addStringOption(o =>
       o.setName("role")
-        .setDescription("Roblox rank name or rank ID")
+        .setDescription("Roblox rank name or rank number")
         .setRequired(true)
         .setAutocomplete(true)
     ),
