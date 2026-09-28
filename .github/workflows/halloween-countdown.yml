@@ -1,0 +1,86 @@
+name: Halloween Countdown
+
+on:
+  schedule:
+    - cron: "5 1 * * *"
+      timezone: "America/New_York"
+  workflow_dispatch:
+
+jobs:
+  halloween-countdown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Eastern Time
+        id: time
+        run: |
+          HOUR=$(TZ=America/New_York date +%H)
+          echo "hour=$HOUR" >> "$GITHUB_OUTPUT"
+
+      - name: Send countdown
+        if: steps.time.outputs.hour == '01' || github.event_name == 'workflow_dispatch'
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CHANNEL_ID: "1430731225944821842"
+        run: |
+          python - <<'PY'
+          import json, os, random, urllib.request
+          from datetime import date, datetime
+          from zoneinfo import ZoneInfo
+
+          eastern_now = datetime.now(ZoneInfo("America/New_York"))
+          today = eastern_now.date()
+
+          halloween = date(today.year, 10, 31)
+          if today >= halloween:
+              halloween = date(today.year + 1, 10, 31)
+          days = (halloween - today).days
+
+          if days == 0:
+              title = "🎃👻 HAPPY HALLOWEEN! 👻🎃"
+              description = "🕸️ **Halloween is finally here!** 🕷️" + chr(10) + chr(10) + "🍬 Hope everyone has a spooky, fun-filled Halloween! 🎃" + chr(10) + "👻 Stay spooky and enjoy the night! 🦇"
+              countdown_label = "🎃 It's Halloween!"
+          else:
+              messages = [
+                  (
+                      "🎃👻 HALLOWEEN COUNTDOWN 👻🎃",
+                      f"🕸️ **{days} days** until Halloween! 🕷️" + chr(10) + chr(10) + "🎃 The spooky countdown is officially on!" + chr(10) + "🍬 Get ready for costumes, candy, and scares! 👻"
+                  ),
+                  (
+                      "👻🎃 GOOD MORNING, SPOOKY FRIENDS! 🎃👻",
+                      f"🦇 Only **{days} days** until Halloween! 🕸️" + chr(10) + chr(10) + "🍬 The candy is calling..." + chr(10) + "👀 Better start planning that costume! 🎃"
+                  ),
+                  (
+                      "🕷️🌙 HALLOWEEN IS COMING! 🌙🕷️",
+                      f"🎃 **{days} days** to go until Halloween! 👻" + chr(10) + chr(10) + "🦇 The spooky season is getting closer!" + chr(10) + "🍬 Who's ready for some tricks and treats?!"
+                  )
+              ]
+              title, description = random.choice(messages)
+              countdown_label = f"🎃 {days} days remaining"
+
+          embed = {
+              "title": title,
+              "description": description,
+              "color": 16729344,
+              "fields": [
+                  {"name": "⏰ Countdown", "value": countdown_label, "inline": True},
+                  {"name": "📅 Halloween", "value": "October 31 🎃", "inline": True}
+              ],
+              "footer": {"text": "👻 Halloween Countdown • New message every morning at 1:05 AM ET"},
+              "timestamp": eastern_now.isoformat()
+          }
+
+          token = os.environ["DISCORD_TOKEN"]
+          channel = os.environ["CHANNEL_ID"]
+          req = urllib.request.Request(
+              f"https://discord.com/api/v10/channels/{channel}/messages",
+              data=json.dumps({"embeds": [embed]}).encode(),
+              headers={
+                  "Authorization": f"Bot {token}",
+                  "Content-Type": "application/json",
+                  "User-Agent": "HalloweenCountdown/1.0"
+              },
+              method="POST",
+          )
+          with urllib.request.urlopen(req) as response:
+              print(f"Discord response: {response.status}")
+          PY
