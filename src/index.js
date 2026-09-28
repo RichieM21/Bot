@@ -14,7 +14,8 @@ import {
   listRoles,
   assignRole,
   unassignHighestRole,
-  getCurrentRole
+  getCurrentRole,
+  permanentBanUser
 } from "./roblox.js";
 
 import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry } from "./db.js";
@@ -123,6 +124,32 @@ client.on(Events.InteractionCreate, async interaction => {
         content: `✅ Verified **${profile.name}** and linked it to your Discord account.`,
         ephemeral: false
       });
+      return;
+    }
+        if (interaction.commandName === "pban") {
+      requireStaff(interaction);
+
+      const username = interaction.options.getString("username", true).trim();
+      const reason = interaction.options.getString("reason", true).trim();
+
+      const user = await getUserByUsername(username);
+      if (!user) {
+        throw new Error("Roblox username not found.");
+      }
+
+      await interaction.deferReply({ ephemeral: false });
+
+      await permanentBanUser(user.id, reason);
+
+     await interaction.editReply(
+      `🚫 Permanently banned **${user.name}** for **${reason}**.`
+       );
+
+      await logAction(
+        interaction,
+        `🚫 **Permanent Roblox Ban**\nStaff: ${interaction.user.tag}\nRoblox: ${user.name} (${user.id})\nReason: ${reason}`
+      );
+
       return;
     }
 
