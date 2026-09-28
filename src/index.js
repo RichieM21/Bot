@@ -311,7 +311,7 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       const roles = await listRoles();
-      const role = /^\\d+$/.test(roleInput)
+      const role = /^\d+$/.test(roleInput)
         ? roles.find(r => String(r.rank) === roleInput)
         : await findRoleByName(roleInput);
 
