@@ -218,3 +218,50 @@ export async function getUserRestriction(userId) {
     throw error;
   }
 }
+
+export async function temporaryBanUser(userId, durationSeconds, reason) {
+  const universeId = process.env.ROBLOX_UNIVERSE_ID;
+  if (!universeId) throw new Error("ROBLOX_UNIVERSE_ID is not configured.");
+
+  return robloxFetch(
+    `${API}/cloud/v2/universes/${universeId}/user-restrictions/${userId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        gameJoinRestriction: {
+          active: true,
+          duration: `${durationSeconds}s`,
+          privateReason: reason,
+          displayReason: reason,
+          excludeAltAccounts: false
+        }
+      })
+    }
+  );
+}
+
+export async function publishGameMessage(topic, data) {
+  const universeId = process.env.ROBLOX_UNIVERSE_ID;
+  if (!universeId) throw new Error("ROBLOX_UNIVERSE_ID is not configured.");
+
+  return robloxFetch(
+    `${API}/cloud/v2/universes/${universeId}:publishMessage`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        topic,
+        message: typeof data === "string" ? data : JSON.stringify(data)
+      })
+    }
+  );
+}
+
+export async function restartUniverseServers() {
+  const universeId = process.env.ROBLOX_UNIVERSE_ID;
+  if (!universeId) throw new Error("ROBLOX_UNIVERSE_ID is not configured.");
+
+  return robloxFetch(
+    `${API}/cloud/v2/universes/${universeId}:restartServers`,
+    { method: "POST", body: JSON.stringify({}) }
+  );
+}
