@@ -7,7 +7,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TextChatService = game:GetService("TextChatService")
 
-local moderationEvent = ReplicatedStorage:WaitForChild("DiscordModerationEvent")
+local adminNotify = ReplicatedStorage:WaitForChild("AdminSystem"):WaitForChild("AdminNotify")
 
 local SERVER_LOCKED = false
 local mutedUntil = {}
@@ -111,7 +111,10 @@ local success, connection = pcall(function()
         elseif action == "UNMUTE" then
             unmute(data.userId)
         elseif action == "ANNOUNCE" then
-            moderationEvent:FireAllClients("ANNOUNCE", tostring(data.message or ""))
+            adminNotify:FireAllClients({
+                type = "announce",
+                message = tostring(data.message or "")
+            })
         elseif action == "SERVERLOCK" then
             SERVER_LOCKED = true
         elseif action == "SERVERUNLOCK" then
