@@ -107,7 +107,7 @@ const commands = [
     ),
 
   new SlashCommandBuilder()
-    .setName("unban")
+    .setName("unpban")
     .setDescription("Unban a Roblox user from the game.")
     .addStringOption(o =>
       o.setName("username")
