@@ -143,7 +143,7 @@ async function logAction(interaction, text) {
         .addFields(
           { name: "Version", value: BOT_VERSION, inline: true },
           { name: "Uptime", value: formatUptime(process.uptime()), inline: true },
-          { name: "Commands", value: String(client.application?.commands?.cache?.size || "Loading"), inline: true },
+          { name: "Commands", value: String((await client.application?.commands?.fetch())?.size || 0), inline: true },
           { name: "Server", value: guild?.name || "Direct message", inline: true },
           { name: "Members", value: guild ? String(guild.memberCount) : "N/A", inline: true }
         )
