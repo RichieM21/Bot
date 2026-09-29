@@ -18,17 +18,7 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("verify")
-    .setDescription("Link your Discord account to a Roblox account.")
-    .addStringOption(o =>
-      o.setName("username")
-        .setDescription("Your Roblox username")
-        .setRequired(true)
-    )
-    .addStringOption(o =>
-      o.setName("code")
-        .setDescription("The verification code you placed in your Roblox profile About section")
-        .setRequired(true)
-    ),
+    .setDescription("Link your Discord account to Roblox through the verification website."),
 
   new SlashCommandBuilder()
     .setName("rank")
