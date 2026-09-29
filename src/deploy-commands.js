@@ -240,6 +240,58 @@ const commands = [
     .setDescription("View rank changes for a Roblox player. Staff only.")
     .addStringOption(o => o.setName("username").setDescription("Roblox username").setRequired(true)),
 
+
+  new SlashCommandBuilder()
+    .setName("help")
+    .setDescription("Show all bot commands and who can use them."),
+
+  new SlashCommandBuilder()
+    .setName("botinfo")
+    .setDescription("Show bot version, uptime, server, and command information."),
+
+  new SlashCommandBuilder()
+    .setName("ping")
+    .setDescription("Show the bot's latency."),
+
+  new SlashCommandBuilder()
+    .setName("uptime")
+    .setDescription("Show how long the bot has been running."),
+
+  new SlashCommandBuilder()
+    .setName("stats")
+    .setDescription("Show bot and server statistics."),
+
+  new SlashCommandBuilder()
+    .setName("say")
+    .setDescription("Make the bot send a message. Staff only.")
+    .addStringOption(o =>
+      o.setName("message")
+        .setDescription("Message for the bot to send")
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("8ball")
+    .setDescription("Ask the Magic 8-Ball a question.")
+    .addStringOption(o =>
+      o.setName("question")
+        .setDescription("Your question")
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("coinflip")
+    .setDescription("Flip a virtual coin."),
+
+  new SlashCommandBuilder()
+    .setName("roast")
+    .setDescription("Give someone a playful roast.")
+    .addUserOption(o =>
+      o.setName("user")
+        .setDescription("User to roast (defaults to you)")
+        .setRequired(false)
+    ),
+
   ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
