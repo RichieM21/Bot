@@ -140,7 +140,7 @@ async function updateVerificationMessage(nonce, payload) {
   if (!token || !client.user?.id) return false;
   const response = await fetch(`https://discord.com/api/v10/webhooks/${client.user.id}/${token}/messages/@original`, {
     method: "PATCH",
-    headers: { "Authorization": `Bot ${process.env.DISCORD_TOKEN}`, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
   if (!response.ok) {
