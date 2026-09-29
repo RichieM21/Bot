@@ -1,5 +1,6 @@
 import "dotenv/config";
 import http from "node:http";
+import crypto from "node:crypto";
 import {
   Client,
   GatewayIntentBits,
@@ -31,7 +32,11 @@ const required = [
   "DISCORD_GUILD_ID",
   "ROBLOX_API_KEY",
   "ROBLOX_GROUP_ID",
-  "DISCORD_STAFF_ROLE_ID"
+  "DISCORD_STAFF_ROLE_ID",
+  "ROBLOX_OAUTH_CLIENT_ID",
+  "ROBLOX_OAUTH_CLIENT_SECRET",
+  "ROBLOX_OAUTH_REDIRECT_URI",
+  "VERIFY_STATE_SECRET"
 ];
 
 for (const key of required) {
@@ -113,6 +118,104 @@ async function logAction(interaction, text) {
   }
 }
 
+
+
+const OAUTH_AUTHORIZE_URL = "https://apis.roblox.com/oauth/v1/authorize";
+const OAUTH_TOKEN_URL = "https://apis.roblox.com/oauth/v1/token";
+const OAUTH_USERINFO_URL = "https://apis.roblox.com/oauth/v1/userinfo";
+const pendingVerificationStates = new Map();
+
+function createVerificationState(discordId) {
+  const nonce = crypto.randomBytes(24).toString("base64url");
+  const expiresAt = Date.now() + 10 * 60 * 1000;
+  const payload = Buffer.from(JSON.stringify({ discordId: String(discordId), nonce, expiresAt })).toString("base64url");
+  const signature = crypto.createHmac("sha256", process.env.VERIFY_STATE_SECRET).update(payload).digest("base64url");
+  pendingVerificationStates.set(nonce, expiresAt);
+  return `${payload}.${signature}`;
+}
+
+function consumeVerificationState(state) {
+  const [payload, signature] = String(state || "").split(".");
+  if (!payload || !signature) throw new Error("Invalid verification link.");
+  const expected = crypto.createHmac("sha256", process.env.VERIFY_STATE_SECRET).update(payload).digest("base64url");
+  const a = Buffer.from(signature);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) throw new Error("Invalid verification link.");
+  let data;
+  try { data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")); }
+  catch { throw new Error("Invalid verification link."); }
+  if (!data.discordId || !data.nonce || Date.now() > Number(data.expiresAt)) {
+    throw new Error("This verification link has expired. Run /verify in Discord again.");
+  }
+  const expiresAt = pendingVerificationStates.get(data.nonce);
+  if (!expiresAt || expiresAt < Date.now()) {
+    throw new Error("This verification link has expired or was already used. Run /verify in Discord again.");
+  }
+  pendingVerificationStates.delete(data.nonce);
+  return data;
+}
+
+function escapeHtml(value) {
+  return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+function htmlPage(title, body) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title><style>
+body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1020;color:#f8fafc;min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}
+.card{width:min(560px,100%);background:#151b2e;border:1px solid #29314d;border-radius:20px;padding:32px;box-sizing:border-box;text-align:center;box-shadow:0 20px 60px #0005}
+h1{margin:0 0 12px;font-size:28px}.sub{color:#aab3cc;line-height:1.6;margin:0 0 24px}.btn{display:inline-block;background:#5865f2;color:white;text-decoration:none;border-radius:12px;padding:14px 22px;font-weight:700}.ok{font-size:48px;margin-bottom:12px}.small{color:#7f8aa8;font-size:13px;margin-top:22px}
+</style></head><body><main class="card">${body}</main></body></html>`;
+}
+
+function sendHtml(res, status, html) {
+  res.writeHead(status, {"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store"});
+  res.end(html);
+}
+
+async function handleRobloxCallback(requestUrl, res) {
+  if (requestUrl.searchParams.get("error")) {
+    sendHtml(res, 400, htmlPage("Verification cancelled", `<div class="ok">↩️</div><h1>Verification cancelled</h1><p class="sub">Roblox authorization was cancelled. Run <b>/verify</b> in Discord to try again.</p>`));
+    return;
+  }
+
+  const code = requestUrl.searchParams.get("code");
+  const stateData = consumeVerificationState(requestUrl.searchParams.get("state"));
+  const pkce = pendingVerificationStates.get(`pkce:${stateData.nonce}`);
+  pendingVerificationStates.delete(`pkce:${stateData.nonce}`);
+  if (!code || !pkce || pkce.expiresAt < Date.now()) {
+    throw new Error("The verification session expired. Run /verify in Discord again.");
+  }
+
+  const tokenResponse = await fetch(OAUTH_TOKEN_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      grant_type:"authorization_code",
+      code,
+      code_verifier:pkce.verifier,
+      client_id:process.env.ROBLOX_OAUTH_CLIENT_ID,
+      client_secret:process.env.ROBLOX_OAUTH_CLIENT_SECRET,
+      redirect_uri:process.env.ROBLOX_OAUTH_REDIRECT_URI
+    })
+  });
+  if (!tokenResponse.ok) throw new Error(`Roblox authorization failed (${tokenResponse.status}).`);
+
+  const tokens=await tokenResponse.json();
+  const userResponse=await fetch(OAUTH_USERINFO_URL,{headers:{Authorization:`Bearer ${tokens.access_token}`}});
+  if (!userResponse.ok) throw new Error(`Could not read Roblox account information (${userResponse.status}).`);
+
+  const robloxUser=await userResponse.json();
+  if (!robloxUser.sub) throw new Error("Roblox did not return a user ID.");
+
+  await setVerified(stateData.discordId,{
+    userId:String(robloxUser.sub),
+    username:robloxUser.preferred_username || robloxUser.name || "Roblox User",
+    verifiedAt:new Date().toISOString(),
+    method:"roblox-oauth"
+  });
+
+  sendHtml(res,200,htmlPage("Roblox verified",`<div class="ok">✅</div><h1>Roblox account linked!</h1><p class="sub"><b>${escapeHtml(robloxUser.preferred_username || robloxUser.name || "Your Roblox account")}</b> is now automatically verified with your Discord account.</p><p class="small">You can close this page and use the bot normally.</p>`));
+}
 
 async function getRobloxUser(username) {
   const user = await getUserByUsername(String(username).trim());
@@ -296,38 +399,23 @@ client.on(Events.InteractionCreate, async interaction => {
 
 
     if (interaction.commandName === "verify") {
-      const username = interaction.options.getString("username", true).trim();
-      const code = interaction.options.getString("code", true).trim();
-
-      if (!/^[A-Za-z0-9]{4,20}$/.test(code)) {
-        throw new Error("That verification code format is invalid.");
-      }
-
-      const user = await getUserByUsername(username);
-      if (!user) throw new Error("Roblox username not found.");
-
-      const profile = await getUserProfile(user.id);
-      const description = profile.description ?? "";
-
-      if (!description.includes(code)) {
-        throw new Error(
-          `I couldn't find **${code}** in ${profile.name}'s Roblox profile About section. Put the code there, then run /verify again.`
-        );
-      }
-
-      await setVerified(interaction.user.id, {
-        userId: String(user.id),
-        username: profile.name,
-        verifiedAt: new Date().toISOString()
-      });
+      const state = createVerificationState(interaction.user.id);
+      const url = new URL(process.env.ROBLOX_OAUTH_REDIRECT_URI);
+      url.pathname = "/verify";
+      url.search = new URLSearchParams({ state }).toString();
 
       await interaction.reply({
-        content: `✅ Verified **${profile.name}** and linked it to your Discord account.`,
-        ephemeral: false
+        content: "🔗 **Link your Roblox account**\n\nClick the button below to open the verification website. Roblox will handle the sign-in, then your account will be linked automatically.\n\n⏳ This link expires in 10 minutes.",
+        components: [{
+          type: 1,
+          components: [{ type: 2, style: 5, label: "🔗 Link Roblox Account", url: url.toString() }]
+        }],
+        ephemeral: true
       });
       return;
     }
-        if (interaction.commandName === "userinfo") {
+
+    if (interaction.commandName === "userinfo") {
       requireStaff(interaction);
 
       const username = interaction.options.getString("username", true).trim();
@@ -857,14 +945,61 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 const port = Number(process.env.PORT || 10000);
-const healthServer = http.createServer((req, res) => {
-  if (req.url === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, discord: client.isReady() }));
-    return;
+const healthServer = http.createServer(async (req, res) => {
+  try {
+    const requestUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+
+    if (requestUrl.pathname === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, discord: client.isReady() }));
+      return;
+    }
+
+    if (requestUrl.pathname === "/verify") {
+      const state = requestUrl.searchParams.get("state");
+      if (!state) {
+        sendHtml(res, 400, htmlPage("Verify Roblox", "<h1>🔗 Link Roblox</h1><p class=\"sub\">Start verification from Discord with <b>/verify</b>.</p>"));
+        return;
+      }
+
+      const [payload, signature] = state.split(".");
+      if (!payload || !signature) throw new Error("Invalid verification link.");
+      const expected = crypto.createHmac("sha256", process.env.VERIFY_STATE_SECRET).update(payload).digest("base64url");
+      const a=Buffer.from(signature), b=Buffer.from(expected);
+      if(a.length!==b.length || !crypto.timingSafeEqual(a,b)) throw new Error("Invalid verification link.");
+      const stateData=JSON.parse(Buffer.from(payload,"base64url").toString("utf8"));
+      const expiresAt=pendingVerificationStates.get(stateData.nonce);
+      if(!expiresAt || expiresAt < Date.now() || Date.now() > Number(stateData.expiresAt)) throw new Error("This verification link has expired. Run /verify in Discord again.");
+
+      const verifier=crypto.randomBytes(48).toString("base64url");
+      const challenge=crypto.createHash("sha256").update(verifier).digest("base64url");
+      pendingVerificationStates.set(`pkce:${stateData.nonce}`,{verifier,expiresAt:Date.now()+10*60*1000});
+
+      const params=new URLSearchParams({
+        client_id:process.env.ROBLOX_OAUTH_CLIENT_ID,
+        redirect_uri:process.env.ROBLOX_OAUTH_REDIRECT_URI,
+        scope:"openid profile",
+        response_type:"code",
+        state,
+        nonce:stateData.nonce,
+        code_challenge:challenge,
+        code_challenge_method:"S256"
+      });
+      sendHtml(res,200,htmlPage("Link Roblox Account",`<h1>🔗 Link Roblox Account</h1><p class="sub">Continue to the official Roblox authorization page. After you approve, you'll be sent back here and automatically verified.</p><a class="btn" href="${OAUTH_AUTHORIZE_URL}?${params.toString()}">Continue with Roblox</a><p class="small">Only your Roblox identity is used for verification.</p>`));
+      return;
+    }
+
+    if (requestUrl.pathname === "/oauth/roblox/callback") {
+      await handleRobloxCallback(requestUrl,res);
+      return;
+    }
+
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("Roblox Ranking Bot is running.");
+  } catch(error) {
+    console.error("Verification web error:",error);
+    sendHtml(res,400,htmlPage("Verification error",`<h1>❌ Verification error</h1><p class="sub">${escapeHtml(error.message || "Something went wrong.")}</p><p class="small">Run /verify in Discord again to start a fresh session.</p>`));
   }
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("Roblox Ranking Bot is running.");
 });
 healthServer.listen(port, "0.0.0.0", () => {
   console.log(`Health server listening on port ${port}`);
