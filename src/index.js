@@ -48,7 +48,7 @@ const client = new Client({
 });
 
 
-const BOT_VERSION = "1.0.0";
+const BOT_VERSION = "1.1.0";
 
 function formatUptime(totalSeconds) {
   let seconds = Math.max(0, Math.floor(totalSeconds));
@@ -134,6 +134,44 @@ function createVerificationState(discordId) {
   return `${payload}.${signature}`;
 }
 
+async function updateVerificationMessage(nonce, payload) {
+  const token = pendingVerificationStates.get(`token:${nonce}`);
+  pendingVerificationStates.delete(`token:${nonce}`);
+  if (!token || !client.user?.id) return false;
+  const response = await fetch(`https://discord.com/api/v10/webhooks/${client.user.id}/${token}/messages/@original`, {
+    method: "PATCH",
+    headers: { "Authorization": `Bot ${process.env.DISCORD_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Could not update the verification message (${response.status}): ${detail}`);
+  }
+  return true;
+}
+
+async function syncDiscordMember(discordId, robloxUsername, robloxUserId) {
+  const guild = await client.guilds.fetch(process.env.DISCORD_GUILD_ID);
+  const member = await guild.members.fetch(discordId);
+  const groupRoles = await listRoles();
+  const targetGroupRole = await getCurrentRole(robloxUserId);
+  if (!targetGroupRole?.role) throw new Error("That Roblox account is not currently a member of the configured group.");
+
+  const targetName = String(targetGroupRole.role.displayName || "").trim();
+  if (!targetName) throw new Error("Roblox returned an invalid group role.");
+  const targetDiscordRole = guild.roles.cache.find(role => !role.managed && role.name.toLowerCase() === targetName.toLowerCase());
+  if (!targetDiscordRole) throw new Error(`No Discord role named "${targetName}" exists. Create a Discord role with the same name as the Roblox group role first.`);
+  if (!targetDiscordRole.editable) throw new Error(`The bot cannot manage the Discord role "${targetDiscordRole.name}". Move the bot highest role above it.`);
+
+  const groupRoleNames = new Set(groupRoles.map(role => String(role.displayName || "").trim().toLowerCase()).filter(Boolean));
+  const oldRankRoles = member.roles.cache.filter(role => !role.managed && groupRoleNames.has(role.name.trim().toLowerCase()) && role.id !== targetDiscordRole.id);
+  if (oldRankRoles.size) await member.roles.remove(oldRankRoles, "Roblox verification role sync");
+  if (!member.roles.cache.has(targetDiscordRole.id)) await member.roles.add(targetDiscordRole, "Roblox verification role sync");
+  if (!member.manageable) throw new Error("The bot cannot change this member nickname. Make sure the bot highest role is above the member.");
+  await member.setNickname(robloxUsername, "Roblox verification nickname sync");
+  return { groupRole: targetGroupRole.role, discordRole: targetDiscordRole };
+}
+
 function consumeVerificationState(state) {
   const [payload, signature] = String(state || "").split(".");
   if (!payload || !signature) throw new Error("Invalid verification link.");
@@ -207,14 +245,19 @@ async function handleRobloxCallback(requestUrl, res) {
   const robloxUser=await userResponse.json();
   if (!robloxUser.sub) throw new Error("Roblox did not return a user ID.");
 
+  const robloxUsername = robloxUser.preferred_username || robloxUser.name || "Roblox User";
+  const sync = await syncDiscordMember(stateData.discordId, robloxUsername, String(robloxUser.sub));
   await setVerified(stateData.discordId,{
     userId:String(robloxUser.sub),
-    username:robloxUser.preferred_username || robloxUser.name || "Roblox User",
+    username:robloxUsername,
     verifiedAt:new Date().toISOString(),
     method:"roblox-oauth"
   });
-
-  sendHtml(res,200,htmlPage("Roblox verified",`<div class="ok">✅</div><h1>Roblox account linked!</h1><p class="sub"><b>${escapeHtml(robloxUser.preferred_username || robloxUser.name || "Your Roblox account")}</b> is now automatically verified with your Discord account.</p><p class="small">You can close this page and use the bot normally.</p>`));
+  await updateVerificationMessage(stateData.nonce, {
+    content: `✅ **Verification Complete**\n\nYour Roblox account has been successfully verified and your Discord account has been synchronized.\n\n**Roblox:** \`${robloxUsername}\`\n**Group Rank:** \`${sync.groupRole.displayName}\` (rank ${sync.groupRole.rank})\n**Discord Role:** \`@${sync.discordRole.name}\`\n**Nickname:** \`${robloxUsername}\``,
+    components: []
+  });
+  sendHtml(res,200,htmlPage("Verification complete",`<div class="ok">✅</div><h1>Verification complete!</h1><p class="sub"><b>${escapeHtml(robloxUsername)}</b> has been verified and your Discord role and nickname have been synchronized.</p><p class="small">You can close this page and return to Discord.</p>`));
 }
 
 async function getRobloxUser(username) {
@@ -412,6 +455,8 @@ client.on(Events.InteractionCreate, async interaction => {
         }],
         ephemeral: true
       });
+      const statePayload = JSON.parse(Buffer.from(state.split(".")[0], "base64url").toString("utf8"));
+      pendingVerificationStates.set(`token:${statePayload.nonce}`, interaction.token);
       return;
     }
 
