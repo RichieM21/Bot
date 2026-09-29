@@ -42,6 +42,46 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
+
+const BOT_VERSION = "1.0.0";
+
+function formatUptime(totalSeconds) {
+  let seconds = Math.max(0, Math.floor(totalSeconds));
+  const days = Math.floor(seconds / 86400);
+  seconds %= 86400;
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds %= 60;
+
+  const parts = [];
+  if (days) parts.push(`${days}d`);
+  if (hours) parts.push(`${hours}h`);
+  if (minutes) parts.push(`${minutes}m`);
+  parts.push(`${seconds}s`);
+  return parts.join(" ");
+}
+
+const EIGHT_BALL = [
+  "It is certain.", "It is decidedly so.", "Without a doubt.",
+  "Yes — definitely.", "You may rely on it.", "Most likely.",
+  "Outlook good.", "Yes.", "Signs point to yes.",
+  "Reply hazy, try again.", "Ask again later.", "Better not tell you now.",
+  "Cannot predict now.", "Don't count on it.", "My reply is no.",
+  "Outlook not so good.", "Very doubtful."
+];
+
+const ROASTS = [
+  "I'd roast you, but your gameplay already did that.",
+  "You're not lagging — your decisions are.",
+  "Even the loading screen has more progress than you.",
+  "I've seen NPCs with better decision-making.",
+  "Your Wi-Fi isn't the problem. It's you.",
+  "You bring everyone together... to ask what happened.",
+  "Somewhere, a Roblox server is trying to figure out what you just did.",
+  "You're proof that the respawn button exists for a reason."
+];
+
 function isStaff(interaction) {
   return interaction.member?.roles?.cache?.has(process.env.DISCORD_STAFF_ROLE_ID);
 }
@@ -66,6 +106,132 @@ async function logAction(interaction, text) {
     if (channel?.isTextBased()) {
       await channel.send(text);
     }
+
+    if (interaction.commandName === "help") {
+      const staffCommands = [
+        "/userinfo", "/rank", "/unrank", "/setrank", "/blacklist", "/roles",
+        "/pban", "/unpban", "/warn", "/warnings", "/clearwarnings", "/kick",
+        "/ban", "/mute", "/unmute", "/history", "/notes", "/profile", "/gameinfo",
+        "/modlog", "/stafflog", "/announce", "/shutdown", "/serverlock",
+        "/serverunlock", "/promote", "/demote", "/rankinfo", "/rankhistory", "/say"
+      ];
+      const everyoneCommands = [
+        "/help", "/myinfo", "/verify", "/getrank", "/botinfo", "/ping",
+        "/uptime", "/stats", "/8ball", "/coinflip", "/roast"
+      ];
+
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle("🤖 Bot Help")
+        .setDescription("Commands are grouped by who can use them.")
+        .addFields(
+          { name: "🌐 Everyone", value: everyoneCommands.join("\n") },
+          { name: "🛡️ Staff Only", value: staffCommands.join("\n") }
+        )
+        .setFooter({ text: `Bot v${BOT_VERSION}` })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "botinfo") {
+      const guild = interaction.guild;
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle("🤖 Bot Information")
+        .addFields(
+          { name: "Version", value: BOT_VERSION, inline: true },
+          { name: "Uptime", value: formatUptime(process.uptime()), inline: true },
+          { name: "Commands", value: String(client.application?.commands?.cache?.size || "Loading"), inline: true },
+          { name: "Server", value: guild?.name || "Direct message", inline: true },
+          { name: "Members", value: guild ? String(guild.memberCount) : "N/A", inline: true }
+        )
+        .setFooter({ text: "Roblox Ranking Bot" })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "ping") {
+      const sentAt = Date.now();
+      await interaction.reply({ content: "🏓 Pinging..." });
+      const roundTrip = Date.now() - sentAt;
+      const websocket = client.ws.ping;
+
+      await interaction.editReply(
+        `🏓 **Pong!**\nRound trip: **${roundTrip}ms**\nDiscord WebSocket: **${websocket}ms**`
+      );
+      return;
+    }
+
+    if (interaction.commandName === "uptime") {
+      await interaction.reply({
+        content: `⏱️ I've been running for **${formatUptime(process.uptime())}**.`,
+        ephemeral: false
+      });
+      return;
+    }
+
+    if (interaction.commandName === "stats") {
+      const guild = interaction.guild;
+      const embed = new EmbedBuilder()
+        .setColor(0x22c55e)
+        .setTitle("📊 Bot & Server Stats")
+        .addFields(
+          { name: "Server", value: guild?.name || "Direct message", inline: true },
+          { name: "Members", value: guild ? String(guild.memberCount) : "N/A", inline: true },
+          { name: "Bot Uptime", value: formatUptime(process.uptime()), inline: true },
+          { name: "WebSocket Ping", value: `${client.ws.ping}ms`, inline: true },
+          { name: "Bot Version", value: BOT_VERSION, inline: true }
+        )
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "say") {
+      requireStaff(interaction);
+      const message = interaction.options.getString("message", true).trim();
+      await interaction.reply({ content: "✅ Sent.", ephemeral: true });
+      await interaction.channel.send({ content: message });
+      return;
+    }
+
+    if (interaction.commandName === "8ball") {
+      const question = interaction.options.getString("question", true).trim();
+      const answer = EIGHT_BALL[Math.floor(Math.random() * EIGHT_BALL.length)];
+      const embed = new EmbedBuilder()
+        .setColor(0x8b5cf6)
+        .setTitle("🎱 Magic 8-Ball")
+        .addFields(
+          { name: "Question", value: question },
+          { name: "Answer", value: answer }
+        )
+        .setFooter({ text: `Asked by ${interaction.user.username}` });
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "coinflip") {
+      const result = Math.random() < 0.5 ? "Heads" : "Tails";
+      await interaction.reply({ content: `🪙 The coin landed on **${result}**!`, ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "roast") {
+      const target = interaction.options.getUser("user") || interaction.user;
+      const roast = ROASTS[Math.floor(Math.random() * ROASTS.length)];
+      await interaction.reply({
+        content: `🔥 **${target.username}** — ${roast}`,
+        ephemeral: false
+      });
+      return;
+    }
+
   } catch (error) {
     console.error("Could not write log:", error);
   }
