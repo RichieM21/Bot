@@ -324,7 +324,7 @@ client.on(Events.InteractionCreate, async interaction => {
         "/serverunlock", "/promote", "/demote", "/rankinfo", "/rankhistory", "/say"
       ];
       const everyoneCommands = [
-        "/help", "/myinfo", "/verify", "/getrank", "/botinfo", "/ping",
+        "/help", "/myinfo", "/verify", "/switchaccount", "/getrank", "/botinfo", "/ping",
         "/uptime", "/stats", "/8ball", "/coinflip", "/roast"
       ];
 
