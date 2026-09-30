@@ -1000,6 +1000,38 @@ const healthServer = http.createServer(async (req, res) => {
       return;
     }
 
+    if (requestUrl.pathname === "/privacy") {
+      sendHtml(res, 200, htmlPage("Privacy Policy", `
+        <h1>Privacy Policy</h1>
+        <p class="sub">BloxyWorld Verification uses Roblox OAuth 2.0 to securely link a Roblox account to a Discord account for community verification and Roblox group management.</p>
+        <h2>Information we use</h2>
+        <p>When you choose to link your account, we receive your Roblox user ID and basic Roblox profile information needed to identify the account. We also associate that Roblox account with your Discord account for verification.</p>
+        <h2>How we use it</h2>
+        <p>This information is used only for account verification, group-rank management, and related community moderation features.</p>
+        <h2>Sharing</h2>
+        <p>We do not sell your information. Information may be processed by Roblox, Discord, and the hosting provider as necessary for the service to operate.</p>
+        <h2>Contact</h2>
+        <p>For privacy questions or account-linking requests, contact the BloxyWorld community staff through the official Discord server.</p>
+      `));
+      return;
+    }
+
+    if (requestUrl.pathname === "/terms") {
+      sendHtml(res, 200, htmlPage("Terms of Service", `
+        <h1>Terms of Service</h1>
+        <p class="sub">By using BloxyWorld Verification, you agree to use the service only for its intended community verification and Roblox group-management purposes.</p>
+        <h2>Use of the service</h2>
+        <p>You must use an account you are authorized to link. Do not attempt to impersonate another Roblox or Discord user or abuse the verification system.</p>
+        <h2>Roblox and Discord</h2>
+        <p>BloxyWorld Verification is a third-party service and is not operated by Roblox Corporation or Discord Inc. Your use of Roblox and Discord remains subject to their respective terms and policies.</p>
+        <h2>Changes and termination</h2>
+        <p>Community staff may restrict access to the verification service or change its functionality when necessary to operate the community.</p>
+        <h2>Contact</h2>
+        <p>For questions about these terms, contact the BloxyWorld community staff through the official Discord server.</p>
+      `));
+      return;
+    }
+
     if (requestUrl.pathname === "/verify") {
       const state = requestUrl.searchParams.get("state");
       if (!state) {
