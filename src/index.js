@@ -1083,11 +1083,28 @@ healthServer.listen(port, "0.0.0.0", () => {
 });
 
 client.once(Events.ClientReady, readyClient => {
-  readyClient.user.setPresence({
-    activities: [{ name: "BloxyWorld", type: 0 }],
-    status: "online"
-  });
-  console.log(`Status set: Playing BloxyWorld`);
+  const statuses = [
+    { name: "🛡️ Protecting BloxyWorld", type: 0 },
+    { name: "📋 Managing BloxyWorld", type: 0 },
+    { name: "🏆 Managing the ranks", type: 0 },
+    { name: "🔗 /verify", type: 0 },
+    { name: "🤖 /help", type: 0 },
+    { name: "⚡ Keeping BloxyWorld running", type: 0 }
+  ];
+
+  let statusIndex = 0;
+
+  const updateStatus = () => {
+    readyClient.user.setPresence({
+      activities: [statuses[statusIndex]],
+      status: "online"
+    });
+    statusIndex = (statusIndex + 1) % statuses.length;
+  };
+
+  updateStatus();
+  setInterval(updateStatus, 45_000);
+  console.log("Rotating Discord status enabled.");
 });
 
 client.login(process.env.DISCORD_TOKEN);
