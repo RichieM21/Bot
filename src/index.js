@@ -1084,12 +1084,10 @@ healthServer.listen(port, "0.0.0.0", () => {
 
 client.once(Events.ClientReady, readyClient => {
   const statuses = [
-    { name: "🛡️ Protecting BloxyWorld", type: 0 },
-    { name: "📋 Managing BloxyWorld", type: 0 },
-    { name: "🏆 Managing the ranks", type: 0 },
-    { name: "🔗 /verify", type: 0 },
-    { name: "🤖 /help", type: 0 },
-    { name: "⚡ Keeping BloxyWorld running", type: 0 }
+    { name: "BloxyWorld | /verify", type: 0 },
+    { name: "BloxyWorld | /help", type: 0 },
+    { name: "Playing BloxyWorld", type: 0 },
+    { name: "Watching for rule breakers", type: 0 }
   ];
 
   let statusIndex = 0;
