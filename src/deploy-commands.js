@@ -96,6 +96,15 @@ const commands = [
     ),
 
     new SlashCommandBuilder()
+    .setName("unblacklist")
+    .setDescription("Remove a user from the ranking blacklist. Staff only.")
+    .addUserOption(o =>
+      o.setName("user")
+        .setDescription("Discord user to remove from the blacklist")
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
     .setName("roles")
     .setDescription("List the Roblox group roles available to the bot.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
