@@ -1082,4 +1082,12 @@ healthServer.listen(port, "0.0.0.0", () => {
   console.log(`Health server listening on port ${port}`);
 });
 
+client.once(Events.ClientReady, readyClient => {
+  readyClient.user.setPresence({
+    activities: [{ name: "BloxyWorld", type: 0 }],
+    status: "online"
+  });
+  console.log(`Status set: Playing BloxyWorld`);
+});
+
 client.login(process.env.DISCORD_TOKEN);
