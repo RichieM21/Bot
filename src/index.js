@@ -442,6 +442,11 @@ client.on(Events.InteractionCreate, async interaction => {
 
 
     if (interaction.commandName === "verify") {
+      const existingVerification = await getVerified(interaction.user.id);
+      if (existingVerification) {
+        throw new Error(`You are already verified as **${existingVerification.username}**. You do not need to verify again.`);
+      }
+
       const state = createVerificationState(interaction.user.id);
       const url = new URL(process.env.ROBLOX_OAUTH_REDIRECT_URI);
       url.pathname = "/verify";
