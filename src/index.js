@@ -819,10 +819,9 @@ client.on(Events.InteractionCreate, async interaction => {
       requireStaff(interaction);
 
       const target = interaction.options.getUser("user", true);
-      const action = interaction.options.getString("action", true);
       const reason = interaction.options.getString("reason")?.trim() || "No reason provided.";
 
-      if (action === "add") {
+      {
         const verified = await getVerified(target.id);
         if (verified) {
           const restriction = await getUserRestriction(verified.userId);
