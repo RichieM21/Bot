@@ -74,10 +74,10 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("blacklist")
-    .setDescription("Add a user to the ranking blacklist. Staff only.")
-    .addUserOption(o =>
-      o.setName("user")
-        .setDescription("Discord user")
+    .setDescription("Add a Roblox user to the ranking blacklist. Staff only.")
+    .addStringOption(o =>
+      o.setName("username")
+        .setDescription("Roblox username")
         .setRequired(true)
     )
     .addStringOption(o =>
@@ -88,10 +88,10 @@ const commands = [
 
     new SlashCommandBuilder()
     .setName("unblacklist")
-    .setDescription("Remove a user from the ranking blacklist. Staff only.")
-    .addUserOption(o =>
-      o.setName("user")
-        .setDescription("Discord user to remove from the blacklist")
+    .setDescription("Remove a Roblox user from the ranking blacklist. Staff only.")
+    .addStringOption(o =>
+      o.setName("username")
+        .setDescription("Roblox username")
         .setRequired(true)
     ),
 
