@@ -867,6 +867,30 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
 
+    if (interaction.commandName === "unblacklist") {
+      requireStaff(interaction);
+
+      const target = interaction.options.getUser("user", true);
+      const blacklist = await getBlacklistEntry(target.id);
+
+      if (!blacklist) {
+        throw new Error(`**${target.username}** is not currently blacklisted.`);
+      }
+
+      await setBlacklisted(target.id, null);
+
+      await interaction.reply({
+        content: `✅ **${target.username}** has been removed from the ranking blacklist.`,
+        ephemeral: false
+      });
+
+      await logAction(
+        interaction,
+        `✅ **Blacklist Removed**\\nStaff: ${interaction.user.tag}\\nTarget: ${target.tag}`
+      );
+      return;
+    }
+
     if (interaction.commandName === "setrank") {
       requireStaff(interaction);
 
