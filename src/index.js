@@ -125,10 +125,10 @@ const OAUTH_TOKEN_URL = "https://apis.roblox.com/oauth/v1/token";
 const OAUTH_USERINFO_URL = "https://apis.roblox.com/oauth/v1/userinfo";
 const pendingVerificationStates = new Map();
 
-function createVerificationState(discordId) {
+function createVerificationState(discordId, mode = "verify") {
   const nonce = crypto.randomBytes(24).toString("base64url");
   const expiresAt = Date.now() + 10 * 60 * 1000;
-  const payload = Buffer.from(JSON.stringify({ discordId: String(discordId), nonce, expiresAt })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ discordId: String(discordId), nonce, expiresAt, mode })).toString("base64url");
   const signature = crypto.createHmac("sha256", process.env.VERIFY_STATE_SECRET).update(payload).digest("base64url");
   pendingVerificationStates.set(nonce, expiresAt);
   return `${payload}.${signature}`;
@@ -441,19 +441,27 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 
 
-    if (interaction.commandName === "verify") {
+    if (interaction.commandName === "verify" || interaction.commandName === "switchaccount") {
       const existingVerification = await getVerified(interaction.user.id);
-      if (existingVerification) {
+      const switching = interaction.commandName === "switchaccount";
+
+      if (!switching && existingVerification) {
         throw new Error(`You are already verified as **${existingVerification.username}**. You do not need to verify again.`);
       }
 
-      const state = createVerificationState(interaction.user.id);
+      if (switching && !existingVerification) {
+        throw new Error("You are not currently verified. Use **/verify** first.");
+      }
+
+      const state = createVerificationState(interaction.user.id, switching ? "switch" : "verify");
       const url = new URL(process.env.ROBLOX_OAUTH_REDIRECT_URI);
       url.pathname = "/verify";
       url.search = new URLSearchParams({ state }).toString();
 
       await interaction.reply({
-        content: "🔗 **Link your Roblox account**\n\nClick the button below to open the verification website. Roblox will handle the sign-in, then your account will be linked automatically.\n\n⏳ This link expires in 10 minutes.",
+        content: switching
+          ? "🔄 **Switch Roblox Account**\n\nClick the button below to link a different Roblox account. Your current linked account will be replaced only after the new account is successfully verified.\n\n⏳ This link expires in 10 minutes."
+          : "🔗 **Link your Roblox account**\n\nClick the button below to open the verification website. Roblox will handle the sign-in, then your account will be linked automatically.\n\n⏳ This link expires in 10 minutes.",
         components: [{
           type: 1,
           components: [{ type: 2, style: 5, label: "🔗 Link Roblox Account", url: url.toString() }]
