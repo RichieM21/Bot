@@ -764,6 +764,14 @@ client.on(Events.InteractionCreate, async interaction => {
         throw new Error("Roblox username not found.");
       }
 
+      const linkedDiscordId = await getDiscordIdByRobloxUserId(user.id);
+      if (linkedDiscordId) {
+        const blacklist = await getBlacklistEntry(linkedDiscordId);
+        if (blacklist) {
+          throw new Error("This user is blacklisted. In order to permanently ban, use the command **/unblacklist.**");
+        }
+      }
+
       await interaction.deferReply({ ephemeral: false });
 
       await permanentBanUser(user.id, reason);
