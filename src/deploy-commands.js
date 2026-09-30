@@ -74,20 +74,11 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("blacklist")
-    .setDescription("Add or remove a user from the ranking blacklist.")
+    .setDescription("Add a user to the ranking blacklist. Staff only.")
     .addUserOption(o =>
       o.setName("user")
         .setDescription("Discord user")
         .setRequired(true)
-    )
-    .addStringOption(o =>
-      o.setName("action")
-        .setDescription("Blacklist action")
-        .setRequired(true)
-        .addChoices(
-          { name: "Add", value: "add" },
-          { name: "Remove", value: "remove" }
-        )
     )
     .addStringOption(o =>
       o.setName("reason")
