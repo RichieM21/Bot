@@ -815,6 +815,18 @@ client.on(Events.InteractionCreate, async interaction => {
       const reason = interaction.options.getString("reason")?.trim() || "No reason provided.";
 
       if (action === "add") {
+        const verified = await getVerified(target.id);
+        if (verified) {
+          const restriction = await getUserRestriction(verified.userId);
+          const gameJoinRestriction = restriction?.gameJoinRestriction;
+
+          if (gameJoinRestriction?.active && !gameJoinRestriction?.duration) {
+            throw new Error(
+              target.username + " is permanently banned from the Roblox game and cannot be blacklisted."
+            );
+          }
+        }
+
         await setBlacklisted(target.id, {
           reason,
           staffId: interaction.user.id,
