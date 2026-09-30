@@ -27,7 +27,11 @@ jobs:
               halloween = date(today.year + 1, 10, 31)
           days = (halloween - today).days
 
-          if days == 0:
+          if today == date(today.year, 10, 1):
+              title = "🎃👻 SPOOKY SEASON HAS OFFICIALLY ARRIVED! 👻🎃"
+              description = "🕸️ **October is finally here!** 🕷️" + chr(10) + chr(10) + "🎃 The Halloween countdown has officially begun!" + chr(10) + "👻 **30 days until Halloween!**" + chr(10) + "🦇 Get ready for a month full of scares, fun, and spooky events!" + chr(10) + chr(10) + "🧡🖤 **Welcome to Spooky Season, BloxyWorld!** 🖤🧡"
+              countdown_label = "🎃 30 days until Halloween!"
+          elif days == 0:
               title = "🎃👻 HAPPY HALLOWEEN! 👻🎃"
               description = "🕸️ **Halloween is finally here!** 🕷️" + chr(10) + chr(10) + "🍬 Hope everyone has a spooky, fun-filled Halloween! 🎃" + chr(10) + "👻 Stay spooky and enjoy the night! 🦇"
               countdown_label = "🎃 It's Halloween!"
