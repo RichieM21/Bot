@@ -818,74 +818,77 @@ client.on(Events.InteractionCreate, async interaction => {
     if (interaction.commandName === "blacklist") {
       requireStaff(interaction);
 
-      const target = interaction.options.getUser("user", true);
+      const username = interaction.options.getString("username", true).trim();
       const reason = interaction.options.getString("reason")?.trim() || "No reason provided.";
 
-      {
-        const verified = await getVerified(target.id);
-        if (verified) {
-          const restriction = await getUserRestriction(verified.userId);
-          const gameJoinRestriction = restriction?.gameJoinRestriction;
+      const robloxUser = await getUserByUsername(username);
+      if (!robloxUser) {
+        throw new Error("Roblox username not found.");
+      }
 
-          if (gameJoinRestriction?.active && !gameJoinRestriction?.duration) {
-            throw new Error(
-              target.username + " is permanently banned from the Roblox game and cannot be blacklisted."
-            );
-          }
-        }
+      const linkedDiscordId = await getDiscordIdByRobloxUserId(robloxUser.id);
+      if (!linkedDiscordId) {
+        throw new Error(`**${robloxUser.name}** is not linked to a Discord account. They must use /verify first.`);
+      }
 
-        await setBlacklisted(target.id, {
-          reason,
-          staffId: interaction.user.id,
-          staffTag: interaction.user.tag,
-          timestamp: new Date().toISOString()
-        });
+      const restriction = await getUserRestriction(robloxUser.id);
+      const gameJoinRestriction = restriction?.gameJoinRestriction;
 
-        await interaction.reply({
-          content: `🚫 **${target.username}** has been blacklisted from Roblox ranking.\nReason: ${reason}`,
-          ephemeral: false
-        });
-
-        await logAction(
-          interaction,
-          `🚫 **Blacklist Added**\nStaff: ${interaction.user.tag}\nTarget: ${target.tag}\nReason: ${reason}`
-        );
-      } else {
-        await setBlacklisted(target.id, null);
-
-        await interaction.reply({
-          content: `✅ **${target.username}** has been removed from the ranking blacklist.`,
-          ephemeral: false
-        });
-
-        await logAction(
-          interaction,
-          `✅ **Blacklist Removed**\nStaff: ${interaction.user.tag}\nTarget: ${target.tag}`
+      if (gameJoinRestriction?.active && !gameJoinRestriction?.duration) {
+        throw new Error(
+          robloxUser.name + " is permanently banned from the Roblox game and cannot be blacklisted."
         );
       }
+
+      await setBlacklisted(linkedDiscordId, {
+        reason,
+        staffId: interaction.user.id,
+        staffTag: interaction.user.tag,
+        timestamp: new Date().toISOString()
+      });
+
+      await interaction.reply({
+        content: `🚫 **${robloxUser.name}** has been blacklisted from Roblox ranking.\nReason: ${reason}`,
+        ephemeral: false
+      });
+
+      await logAction(
+        interaction,
+        `🚫 **Blacklist Added**\nStaff: ${interaction.user.tag}\nRoblox: ${robloxUser.name} (${robloxUser.id})\nReason: ${reason}`
+      );
       return;
     }
 
     if (interaction.commandName === "unblacklist") {
       requireStaff(interaction);
 
-      const target = interaction.options.getUser("user", true);
-      const blacklist = await getBlacklistEntry(target.id);
-
-      if (!blacklist) {
-        throw new Error(`**${target.username}** is not currently blacklisted.`);
+      const username = interaction.options.getString("username", true).trim();
+      const robloxUser = await getUserByUsername(username);
+      if (!robloxUser) {
+        throw new Error("Roblox username not found.");
       }
 
-      await setBlacklisted(target.id, null);
+      const linkedDiscordId = await getDiscordIdByRobloxUserId(robloxUser.id);
+      if (!linkedDiscordId) {
+        throw new Error(`**${robloxUser.name}** is not linked to a Discord account.`);
+      }
+
+      const blacklist = await getBlacklistEntry(linkedDiscordId);
+
+      if (!blacklist) {
+        throw new Error(`**${robloxUser.name}** is not currently blacklisted.`);
+      }
+
+      await setBlacklisted(linkedDiscordId, null);
 
       await interaction.reply({
-        content: `✅ **${target.username}** has been removed from the ranking blacklist.`,
+        content: `✅ **${robloxUser.name}** has been removed from the ranking blacklist.`,
         ephemeral: false
       });
 
       await logAction(
         interaction,
-        `✅ **Blacklist Removed**\\nStaff: ${interaction.user.tag}\\nTarget: ${target.tag}`
+        `✅ **Blacklist Removed**\\nStaff: ${interaction.user.tag}\\nRoblox: ${robloxUser.name} (${robloxUser.id})`
       );
       return;
     }
