@@ -1017,14 +1017,16 @@ const healthServer = http.createServer(async (req, res) => {
       sendHtml(res, 200, htmlPage("Privacy Policy", `
         <h1>Privacy Policy</h1>
         <p class="sub">BloxyWorld Connect uses Roblox OAuth 2.0 to connect a Roblox account with a Discord account for account linking and Roblox group management.</p>
-        <h2>Information we use</h2>
-        <p>When you choose to link your account, we receive your Roblox user ID and basic Roblox profile information needed to identify the account. We also associate that Roblox account with your Discord account for verification.</p>
+        <h2>Information we store</h2>
+        <p>When you link your account, we store your Discord user ID, Roblox user ID, Roblox username, verification time, and verification method. The service may also store moderation records, warnings, blacklist information, staff notes, and rank-related history when those features are used.</p>
         <h2>How we use it</h2>
-        <p>This information is used for account linking, group-rank management, and related community moderation features.</p>
+        <p>This information is used to maintain your account link, manage Roblox group ranks, provide moderation features, and maintain records needed to operate the community.</p>
+        <h2>Access and removal</h2>
+        <p>You may contact BloxyWorld community staff to request access to information associated with your account or to request removal of your account-linking information. Some records may need to be retained when reasonably necessary for moderation, security, fraud prevention, legal obligations, or community administration.</p>
         <h2>Sharing</h2>
-        <p>We do not sell your information. Information may be processed by Roblox, Discord, and the hosting provider as necessary for the service to operate.</p>
+        <p>We do not sell your information. Information may be processed by Roblox, Discord, Supabase, Render, and other service providers used to operate BloxyWorld Connect.</p>
         <h2>Contact</h2>
-        <p>For privacy questions or account-linking requests, contact the BloxyWorld community staff through the official Discord server.</p>
+        <p>For privacy questions, access requests, or removal requests, contact the BloxyWorld community staff through the official Discord server.</p>
       `));
       return;
     }
@@ -1037,8 +1039,10 @@ const healthServer = http.createServer(async (req, res) => {
         <p>You must use an account you are authorized to link. Do not attempt to impersonate another Roblox or Discord user or abuse the verification system.</p>
         <h2>Roblox and Discord</h2>
         <p>BloxyWorld Connect is a third-party service and is not operated by Roblox Corporation or Discord Inc. Your use of Roblox and Discord remains subject to their respective terms and policies.</p>
+        <h2>Data and account records</h2>
+        <p>Using the service means you understand that information described in the Privacy Policy may be stored to provide account linking, ranking, moderation, and security features. You may contact community staff to request access to or removal of information associated with your account, subject to legitimate retention needs.</p>
         <h2>Changes and termination</h2>
-        <p>Community staff may restrict access to the verification service or change its functionality when necessary to operate the community.</p>
+        <p>Community staff may restrict access to the verification service or change its functionality when necessary to operate the community. The service may retain records reasonably necessary for moderation, security, fraud prevention, legal obligations, or community administration.</p>
         <h2>Contact</h2>
         <p>For questions about these terms, contact the BloxyWorld community staff through the official Discord server.</p>
       `));
