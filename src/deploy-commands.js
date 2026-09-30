@@ -21,6 +21,10 @@ const commands = [
     .setDescription("Link your Discord account to Roblox through the verification website."),
 
   new SlashCommandBuilder()
+    .setName("switchaccount")
+    .setDescription("Switch your Discord account to a different Roblox account."),
+
+  new SlashCommandBuilder()
     .setName("rank")
     .setDescription("Set a verified Roblox user's group rank.")
     .addUserOption(o =>
