@@ -62,25 +62,59 @@ jobs:
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
           api_url = f"https://discord.com/api/v10/channels/{channel}/messages"
-          headers = {
+          auth_headers = {
               "Authorization": f"Bot {token}",
-              "Content-Type": "application/json",
               "User-Agent": "ChristmasCountdown/1.0"
           }
 
-          def send(payload):
+          def send_json(payload):
               req = urllib.request.Request(
                   api_url,
                   data=json.dumps(payload).encode(),
-                  headers=headers,
+                  headers={**auth_headers, "Content-Type": "application/json"},
                   method="POST",
               )
               with urllib.request.urlopen(req) as response:
                   print(f"Discord response: {response.status}")
 
-          # On November 1 (or preview), send Mariah as its own message first.
+          def send_gif(url):
+              gif_data = urllib.request.urlopen(url).read()
+              boundary = "----BloxyWorldChristmasBoundary"
+              payload = {
+                  "embeds": [{
+                      "image": {"url": "attachment://mariah.gif"}
+                  }]
+              }
+              parts = []
+              parts.append(
+                  f"--{boundary}\r\n"
+                  'Content-Disposition: form-data; name="payload_json"\r\n'
+                  "Content-Type: application/json\r\n\r\n"
+                  + json.dumps(payload)
+                  + "\r\n"
+              )
+              parts.append(
+                  f"--{boundary}\r\n"
+                  'Content-Disposition: form-data; name="files[0]"; filename="mariah.gif"\r\n'
+                  "Content-Type: image/gif\r\n\r\n"
+              )
+              body = "".join(parts).encode() + gif_data + f"\r\n--{boundary}--\r\n".encode()
+
+              req = urllib.request.Request(
+                  api_url,
+                  data=body,
+                  headers={
+                      **auth_headers,
+                      "Content-Type": f"multipart/form-data; boundary={boundary}"
+                  },
+                  method="POST",
+              )
+              with urllib.request.urlopen(req) as response:
+                  print(f"Discord GIF response: {response.status}")
+
+          # On November 1 (or preview), send the actual GIF as its own message first.
           if gif_url:
-              send({"embeds": [{"image": {"url": gif_url}}]})
+              send_gif(gif_url)
               time.sleep(1)
 
           embed = {
@@ -95,5 +129,5 @@ jobs:
               "timestamp": eastern_now.isoformat()
           }
 
-          send({"embeds": [embed]})
+          send_json({"embeds": [embed]})
           PY
