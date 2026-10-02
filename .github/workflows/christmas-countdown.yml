@@ -23,7 +23,7 @@ jobs:
           PREVIEW: ${{ inputs.preview }}
         run: |
           python - <<'PY'
-          import json, os, random, urllib.request
+          import json, os, random, re, urllib.request
           from datetime import date, datetime
           from zoneinfo import ZoneInfo
 
@@ -42,7 +42,26 @@ jobs:
               description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄" + chr(10) + "🎁 **54 days until Christmas!**"
               color = 16711680
               countdown_label = "🎄 54 days until Christmas!"
-              gif_url = "https://tenor.com/view/mariah-carey-its-time-xmas-christmas-gif-8201975091635355232"
+              gif_page = "https://tenor.com/view/mariah-carey-its-time-xmas-christmas-gif-8201975091635355232"
+
+              # Resolve Tenor's preview image to a direct CDN URL so Discord
+              # renders the GIF/image instead of showing the Tenor page as a link.
+              gif_url = None
+              try:
+                  req = urllib.request.Request(
+                      gif_page,
+                      headers={"User-Agent": "Mozilla/5.0"}
+                  )
+                  with urllib.request.urlopen(req) as response:
+                      html = response.read().decode("utf-8", "ignore")
+                  match = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)', html, re.I)
+                  if not match:
+                      match = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', html, re.I)
+                  if match:
+                      gif_url = match.group(1).replace("&amp;", "&")
+              except Exception as error:
+                  print(f"Could not resolve Tenor GIF preview: {error}")
+
           elif days == 0:
               title = "🎄🎅 MERRY CHRISTMAS! 🎅🎄"
               description = "🎁 **Christmas is finally here!** ❤️" + chr(10) + chr(10) + "☃️ Hope everyone has an amazing Christmas filled with fun, food, family, friends, and plenty of Christmas spirit! ✨"
@@ -53,7 +72,7 @@ jobs:
               messages = [
                   ("🎄✨ CHRISTMAS COUNTDOWN ✨🎄", f"🎅 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "☃️ The countdown is officially on!" + chr(10) + "🔔 Get ready for the most wonderful time of the year! ❤️"),
                   ("🎅🎄 GOOD MORNING! 🎄🎅", f"✨ There are **{days} days** left until Christmas! 🎁" + chr(10) + chr(10) + "☃️ Keep spreading the Christmas spirit!" + chr(10) + "🎁 Santa is getting closer... 👀"),
-                  ("❄️🎄 CHRISTMAS IS COMING! 🎄❄️", f"🎁 Only **{days} days** to go! 🎅" + chr(10) + chr(10) + "✨ Time to get into the Christmas spirit!" + chr(10) + "☃️ Who's ready?! ❤️")
+                  ("❄️🎄 CHRISTMAS IS COMING! 🎄❄️", f"🎁 Only **{days} days** to go! 🎅" + chr(10) + chr(10) + "✨ Time to get into the Christmas spirit! 🎅" + chr(10) + "☃️ Who's ready?! ❤️")
               ]
               title, description = random.choice(messages)
               color = 16711680
@@ -72,9 +91,10 @@ jobs:
               "timestamp": eastern_now.isoformat()
           }
 
-          payload = {"embeds": [embed]}
           if gif_url:
-              payload["content"] = gif_url
+              embed["image"] = {"url": gif_url}
+
+          payload = {"embeds": [embed]}
 
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
