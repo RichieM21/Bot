@@ -235,6 +235,28 @@ const commands = [
     .addStringOption(o => o.setName("username").setDescription("Roblox username").setRequired(true)),
 
 
+
+  new SlashCommandBuilder()
+    .setName("eventtest")
+    .setDescription("Test a Halloween or Christmas event game. Staff only.")
+    .addStringOption(o =>
+      o.setName("game")
+        .setDescription("Seasonal game to test")
+        .setRequired(true)
+        .addChoices(
+          { name: "🎃 Halloween — Trick-or-Treat", value: "halloween_trickortreat" },
+          { name: "👻 Halloween — Ghost Hunt", value: "halloween_ghosthunt" },
+          { name: "🧟 Halloween — Zombie Survival", value: "halloween_zombie" },
+          { name: "🔎 Halloween — Mystery", value: "halloween_mystery" },
+          { name: "🎃 Halloween — Pumpkin Hunt", value: "halloween_pumpkinhunt" },
+          { name: "🎁 Christmas — Open Present", value: "christmas_openpresent" },
+          { name: "🦌 Christmas — Reindeer Race", value: "christmas_reindeerrace" },
+          { name: "🧑‍🎄 Christmas — Santa's Workshop", value: "christmas_workshop" },
+          { name: "❄️ Christmas — Snowball Fight", value: "christmas_snowball" },
+          { name: "🎅 Christmas — Santa Says", value: "christmas_santays" }
+        )
+    ),
+
   new SlashCommandBuilder()
     .setName("help")
     .setDescription("Show all bot commands and who can use them."),
