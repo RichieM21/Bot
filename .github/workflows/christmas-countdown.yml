@@ -23,7 +23,7 @@ jobs:
           PREVIEW: ${{ inputs.preview }}
         run: |
           python - <<'PY'
-          import json, os, random, urllib.request
+          import json, os, random, time, urllib.request
           from datetime import date, datetime
           from zoneinfo import ZoneInfo
 
@@ -36,20 +36,19 @@ jobs:
           days = (christmas - today).days
 
           preview = os.environ.get("PREVIEW", "").lower() == "true"
+          gif_url = None
 
           if today == date(today.year, 11, 1) or preview:
               title = "🎄🎅 IT’S TIME! 🎅🎄"
               description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄" + chr(10) + "🎁 **54 days until Christmas!**"
               color = 16711680
               countdown_label = "🎄 54 days until Christmas!"
-              # Actual Tenor CDN GIF for the selected Mariah Carey GIF.
               gif_url = "https://media1.tenor.com/m/cdNE49GG_mAAAAAd/mariah-carey-its-time-xmas-christmas.gif"
           elif days == 0:
               title = "🎄🎅 MERRY CHRISTMAS! 🎅🎄"
               description = "🎁 **Christmas is finally here!** ❤️" + chr(10) + chr(10) + "☃️ Hope everyone has an amazing Christmas filled with fun, food, family, friends, and plenty of Christmas spirit! ✨"
               color = 16711680
               countdown_label = "🎁 It's Christmas!"
-              gif_url = None
           else:
               messages = [
                   ("🎄✨ CHRISTMAS COUNTDOWN ✨🎄", f"🎅 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "☃️ The countdown is officially on!" + chr(10) + "🔔 Get ready for the most wonderful time of the year! ❤️"),
@@ -59,7 +58,30 @@ jobs:
               title, description = random.choice(messages)
               color = 16711680
               countdown_label = f"🎄 {days} days remaining"
-              gif_url = None
+
+          token = os.environ["DISCORD_TOKEN"]
+          channel = os.environ["CHANNEL_ID"]
+          api_url = f"https://discord.com/api/v10/channels/{channel}/messages"
+          headers = {
+              "Authorization": f"Bot {token}",
+              "Content-Type": "application/json",
+              "User-Agent": "ChristmasCountdown/1.0"
+          }
+
+          def send(payload):
+              req = urllib.request.Request(
+                  api_url,
+                  data=json.dumps(payload).encode(),
+                  headers=headers,
+                  method="POST",
+              )
+              with urllib.request.urlopen(req) as response:
+                  print(f"Discord response: {response.status}")
+
+          # On November 1 (or preview), send Mariah as its own message first.
+          if gif_url:
+              send({"embeds": [{"image": {"url": gif_url}}]})
+              time.sleep(1)
 
           embed = {
               "title": title,
@@ -73,24 +95,5 @@ jobs:
               "timestamp": eastern_now.isoformat()
           }
 
-          if gif_url:
-              # Discord can render this actual .gif URL as an image in the embed.
-              embed["image"] = {"url": gif_url}
-
-          payload = {"embeds": [embed]}
-
-          token = os.environ["DISCORD_TOKEN"]
-          channel = os.environ["CHANNEL_ID"]
-          req = urllib.request.Request(
-              f"https://discord.com/api/v10/channels/{channel}/messages",
-              data=json.dumps(payload).encode(),
-              headers={
-                  "Authorization": f"Bot {token}",
-                  "Content-Type": "application/json",
-                  "User-Agent": "ChristmasCountdown/1.0"
-              },
-              method="POST",
-          )
-          with urllib.request.urlopen(req) as response:
-              print(f"Discord response: {response.status}")
+          send({"embeds": [embed]})
           PY
