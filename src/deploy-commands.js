@@ -237,6 +237,18 @@ const commands = [
 
 
   new SlashCommandBuilder()
+    .setName("event")
+    .setDescription("Open the current seasonal event games."),
+
+  new SlashCommandBuilder()
+    .setName("eventprofile")
+    .setDescription("View your current seasonal event profile."),
+
+  new SlashCommandBuilder()
+    .setName("eventleaderboard")
+    .setDescription("View the current seasonal event leaderboard."),
+
+  new SlashCommandBuilder()
     .setName("eventtest")
     .setDescription("Test a Halloween or Christmas event game. Staff only.")
     .addStringOption(o =>
