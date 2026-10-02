@@ -42,8 +42,7 @@ jobs:
               description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄" + chr(10) + "🎁 **54 days until Christmas!**"
               color = 16711680
               countdown_label = "🎄 54 days until Christmas!"
-              # Direct Tenor CDN GIF URL — Discord can render this directly.
-              gif_url = "https://media1.tenor.com/m/6EvXhNiwHYQAAAAd/mariah-carey-mariah-thaw.gif"
+              gif_url = "https://tenor.com/g2gP9BJUcOT.gif"
           elif days == 0:
               title = "🎄🎅 MERRY CHRISTMAS! 🎅🎄"
               description = "🎁 **Christmas is finally here!** ❤️" + chr(10) + chr(10) + "☃️ Hope everyone has an amazing Christmas filled with fun, food, family, friends, and plenty of Christmas spirit! ✨"
@@ -73,10 +72,11 @@ jobs:
               "timestamp": eastern_now.isoformat()
           }
 
-          if gif_url:
-              embed["image"] = {"url": gif_url}
-
+          # Put the verified direct GIF URL in the message content so Discord
+          # renders the GIF itself rather than relying on an embed image fetch.
           payload = {"embeds": [embed]}
+          if gif_url:
+              payload["content"] = gif_url
 
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
