@@ -5,7 +5,10 @@ import {
   Client,
   GatewayIntentBits,
   Events,
-  EmbedBuilder
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } from "discord.js";
 
 import {
@@ -24,7 +27,7 @@ import {
   restartUniverseServers
 } from "./roblox.js";
 
-import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry, getDiscordIdByRobloxUserId, addModerationAction, getModerationHistory, clearWarnings, addStaffNote, getStaffNotes } from "./db.js";
+import { getVerified, setVerified, isBlacklisted, setBlacklisted, getBlacklistEntry, getDiscordIdByRobloxUserId, addModerationAction, getModerationHistory, clearWarnings, addStaffNote, getStaffNotes, getSeasonalProfile, playSeasonalGame, getSeasonalLeaderboard } from "./db.js";
 
 const required = [
   "DISCORD_TOKEN",
@@ -179,6 +182,139 @@ const EVENT_TESTS = {
     ]
   }
 };
+
+function getSeason() {
+  const month = new Date().getMonth() + 1;
+  return month >= 10 ? (month === 10 ? "halloween" : "christmas") : "christmas";
+}
+
+const SEASONAL_GAMES = {
+  halloween: {
+    name: "🎃 Halloween",
+    games: {
+      haunted: {
+        name: "🏚️ Haunted House",
+        prompt: "You hear something moving inside. Which way do you go?",
+        choices: [
+          ["left", "🚪 Left Door"],
+          ["middle", "🕯️ Dark Hall"],
+          ["right", "🪟 Broken Window"]
+        ],
+        outcomes: [
+          ["left", "👻 A ghost jumps out! You escape with a cursed candy.", 35],
+          ["middle", "💎 You discover a hidden vault of candy.", 60],
+          ["right", "🕷️ You get trapped by spiders, but find a golden pumpkin.", 45]
+        ]
+      },
+      heist: {
+        name: "🎃 Pumpkin Heist",
+        prompt: "The Golden Pumpkin is guarded. Pick your move.",
+        choices: [
+          ["sneak", "🥷 Sneak"],
+          ["distract", "🎭 Distract"],
+          ["run", "🏃 Run for it"]
+        ],
+        outcomes: [
+          ["sneak", "💰 Perfect steal! You got the Golden Pumpkin.", 75],
+          ["distract", "🎃 You grabbed a pumpkin while everyone looked away.", 50],
+          ["run", "💨 You escaped with a handful of candy.", 25]
+        ]
+      },
+      mystery: {
+        name: "🔎 Halloween Mystery",
+        prompt: "Three clues are waiting. Which do you investigate?",
+        choices: [
+          ["footprint", "👣 Footprint"],
+          ["journal", "📖 Journal"],
+          ["key", "🔑 Rusty Key"]
+        ],
+        outcomes: [
+          ["footprint", "🩸 The trail leads to a hidden crypt.", 55],
+          ["journal", "📖 The journal reveals the secret code.", 65],
+          ["key", "🔑 The key opens a chest of candy.", 45]
+        ]
+      }
+    }
+  },
+  christmas: {
+    name: "🎄 Christmas",
+    games: {
+      heist: {
+        name: "🎁 Present Heist",
+        prompt: "Santa's workshop is guarded. Choose your route.",
+        choices: [
+          ["roof", "🏠 Rooftop"],
+          ["chimney", "🔥 Chimney"],
+          ["warehouse", "📦 Warehouse"]
+        ],
+        outcomes: [
+          ["roof", "🎁 You reached the rare-present room.", 65],
+          ["chimney", "🎅 Santa catches you, but gives you a present anyway.", 40],
+          ["warehouse", "⭐ Jackpot! You found an Epic Present.", 75]
+        ]
+      },
+      race: {
+        name: "🦌 Reindeer Race",
+        prompt: "Pick your reindeer for the race.",
+        choices: [
+          ["rudolph", "🔴 Rudolph"],
+          ["dasher", "⚡ Dasher"],
+          ["blitzen", "⚡ Blitzen"]
+        ],
+        outcomes: [
+          ["rudolph", "🏆 Rudolph pulls ahead at the finish!", 70],
+          ["dasher", "🥈 Dasher takes second but earns a big bonus.", 55],
+          ["blitzen", "❄️ Blitzen hits a snowbank but still finishes strong.", 45]
+        ]
+      },
+      snowball: {
+        name: "❄️ Snowball Warfare",
+        prompt: "Incoming snowball! What's your move?",
+        choices: [
+          ["attack", "🎯 Attack"],
+          ["dodge", "💨 Dodge"],
+          ["counter", "🔥 Counterattack"]
+        ],
+        outcomes: [
+          ["attack", "🎯 Direct hit! You dominate the round.", 60],
+          ["dodge", "💨 Perfect dodge! You earn a tactical bonus.", 45],
+          ["counter", "🔥 Critical hit! Huge snowball combo.", 75]
+        ]
+      }
+    }
+  }
+};
+
+function seasonalPanel() {
+  const season = getSeason();
+  const config = SEASONAL_GAMES[season];
+  const buttons = Object.entries(config.games).map(([key, game]) =>
+    new ButtonBuilder().setCustomId(`seasonal:start:${season}:${key}`).setLabel(game.name.replace(/^\\S+\\s/, "")).setStyle(ButtonStyle.Primary)
+  );
+  return {
+    season,
+    embed: new EmbedBuilder()
+      .setColor(season === "halloween" ? 0xf97316 : 0x22c55e)
+      .setTitle(`${config.name} Event`)
+      .setDescription(
+        "🎮 **Choose a game below.**\n\n" +
+        "Each game is a real interactive challenge with a cooldown. Earn event points, build your seasonal record, and climb the leaderboard.\n\n" +
+        "🏆 Use **/eventleaderboard** to see the competition.\n📊 Use **/eventprofile** to see your record."
+      )
+      .setFooter({ text: "Seasonal event • Your points are saved" })
+      .setTimestamp(),
+    row: new ActionRowBuilder().addComponents(buttons)
+  };
+}
+
+function seasonalChoiceRow(season, gameKey) {
+  const game = SEASONAL_GAMES[season].games[gameKey];
+  return new ActionRowBuilder().addComponents(
+    ...game.choices.map(([key, label]) =>
+      new ButtonBuilder().setCustomId(`seasonal:play:${season}:${gameKey}:${key}`).setLabel(label).setStyle(ButtonStyle.Secondary)
+    )
+  );
+}
 
 function getEventTestResult(game) {
   const event = EVENT_TESTS[game];
@@ -401,6 +537,47 @@ function formatHistory(entries, filter = null) {
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
+    if (interaction.isButton() && interaction.customId.startsWith("seasonal:")) {
+      const parts = interaction.customId.split(":");
+      if (parts[1] === "start") {
+        const season = parts[2];
+        const gameKey = parts[3];
+        const game = SEASONAL_GAMES[season]?.games?.[gameKey];
+        if (!game || season !== getSeason()) throw new Error("That seasonal game is no longer active.");
+        await interaction.reply({
+          content: `🎮 **${game.name}**\n\n${game.prompt}\n\nChoose carefully — your result will be added to the seasonal leaderboard.`,
+          components: [seasonalChoiceRow(season, gameKey)],
+          ephemeral: true
+        });
+        return;
+      }
+      if (parts[1] === "play") {
+        const season = parts[2], gameKey = parts[3], choice = parts[4];
+        const game = SEASONAL_GAMES[season]?.games?.[gameKey];
+        if (!game || season !== getSeason()) throw new Error("That seasonal game is no longer active.");
+        const result = game.outcomes.find(x => x[0] === choice);
+        if (!result) throw new Error("Invalid game choice.");
+        const played = await playSeasonalGame(interaction.user.id, season, gameKey, result[2]);
+        if (!played.allowed) {
+          throw new Error(`You're on cooldown for this game. Try again <t:${Math.floor(new Date(played.nextAvailable).getTime()/1000)}:R>.`);
+        }
+        const profile = played.profile;
+        const embed = new EmbedBuilder()
+          .setColor(season === "halloween" ? 0xf97316 : 0x22c55e)
+          .setTitle(`${game.name} — Result`)
+          .setDescription(result[1])
+          .addFields(
+            { name: "🎯 Points Earned", value: `+${result[2]}`, inline: true },
+            { name: "🏆 Total Points", value: String(profile.points), inline: true },
+            { name: "🎮 Games Played", value: String(profile.games), inline: true }
+          )
+          .setFooter({ text: `Played by ${interaction.user.username}` })
+          .setTimestamp();
+        await interaction.update({ content: null, embeds: [embed], components: [] });
+        return;
+      }
+    }
+
     // Role-name autocomplete
     if (interaction.isAutocomplete()) {
       if (interaction.commandName !== "rank" && interaction.commandName !== "setrank") return;
@@ -436,7 +613,7 @@ client.on(Events.InteractionCreate, async interaction => {
       ];
       const everyoneCommands = [
         "/help", "/myinfo", "/verify", "/switchaccount", "/getrank", "/botinfo", "/ping",
-        "/uptime", "/stats", "/8ball", "/coinflip", "/roast"
+        "/uptime", "/stats", "/8ball", "/coinflip", "/roast", "/event", "/eventprofile", "/eventleaderboard"
       ];
 
       const embed = new EmbedBuilder()
@@ -516,6 +693,46 @@ client.on(Events.InteractionCreate, async interaction => {
       const message = interaction.options.getString("message", true).trim();
       await interaction.reply({ content: "✅ Sent.", ephemeral: true });
       await interaction.channel.send({ content: message });
+      return;
+    }
+
+    if (interaction.commandName === "event") {
+      const panel = seasonalPanel();
+      await interaction.reply({ embeds: [panel.embed], components: [panel.row], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "eventprofile") {
+      const profile = await getSeasonalProfile(interaction.user.id, getSeason());
+      const config = SEASONAL_GAMES[getSeason()];
+      const embed = new EmbedBuilder()
+        .setColor(getSeason() === "halloween" ? 0xf97316 : 0x22c55e)
+        .setTitle(`📊 ${config.name} Event Profile`)
+        .setDescription(`**${interaction.user.username}**`)
+        .addFields(
+          { name: "🏆 Points", value: String(profile.points), inline: true },
+          { name: "🎮 Games", value: String(profile.games), inline: true },
+          { name: "🥇 Wins", value: String(profile.wins), inline: true }
+        )
+        .setFooter({ text: "Your seasonal record is saved" })
+        .setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
+    if (interaction.commandName === "eventleaderboard") {
+      const season = getSeason();
+      const rows = await getSeasonalLeaderboard(season, 10);
+      const description = rows.length
+        ? rows.map((r, i) => `**${i + 1}.** <@${r.discordId}> — **${r.points} pts** • ${r.games} games`).join("\n")
+        : "No one has played yet. Be the first!";
+      const embed = new EmbedBuilder()
+        .setColor(season === "halloween" ? 0xf97316 : 0x22c55e)
+        .setTitle(`🏆 ${SEASONAL_GAMES[season].name} Leaderboard`)
+        .setDescription(description)
+        .setFooter({ text: "Top 10 • Seasonal points" })
+        .setTimestamp();
+      await interaction.reply({ embeds: [embed], ephemeral: false });
       return;
     }
 
