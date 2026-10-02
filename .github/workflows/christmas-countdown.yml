@@ -5,6 +5,12 @@ on:
     - cron: "5 1 * * *"
       timezone: "America/New_York"
   workflow_dispatch:
+    inputs:
+      preview:
+        description: "Send the November 1 IT’S TIME! preview"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   christmas-countdown:
@@ -14,6 +20,7 @@ jobs:
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CHANNEL_ID: "1430731225944821842"
+          PREVIEW: ${{ inputs.preview }}
         run: |
           python - <<'PY'
           import json, os, random, urllib.request
@@ -28,8 +35,9 @@ jobs:
               christmas = date(today.year + 1, 12, 25)
           days = (christmas - today).days
 
-          # Special Christmas-season kickoff on November 1.
-          if today == date(today.year, 11, 1):
+          preview = os.environ.get("PREVIEW", "").lower() == "true"
+
+          if today == date(today.year, 11, 1) or preview:
               title = "🎄🎅 IT’S TIME! 🎅🎄"
               description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄" + chr(10) + "🎁 **54 days until Christmas!**"
               color = 16711680
@@ -43,18 +51,9 @@ jobs:
               gif_url = None
           else:
               messages = [
-                  (
-                      "🎄✨ CHRISTMAS COUNTDOWN ✨🎄",
-                      f"🎅 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "☃️ The countdown is officially on!" + chr(10) + "🔔 Get ready for the most wonderful time of the year! ❤️"
-                  ),
-                  (
-                      "🎅🎄 GOOD MORNING! 🎄🎅",
-                      f"✨ There are **{days} days** left until Christmas! 🎁" + chr(10) + chr(10) + "☃️ Keep spreading the Christmas spirit!" + chr(10) + "🎁 Santa is getting closer... 👀"
-                  ),
-                  (
-                      "❄️🎄 CHRISTMAS IS COMING! 🎄❄️",
-                      f"🎁 Only **{days} days** to go! 🎅" + chr(10) + chr(10) + "✨ Time to get into the Christmas spirit!" + chr(10) + "☃️ Who's ready?! ❤️"
-                  )
+                  ("🎄✨ CHRISTMAS COUNTDOWN ✨🎄", f"🎅 **{days} days** until Christmas! 🎁" + chr(10) + chr(10) + "☃️ The countdown is officially on!" + chr(10) + "🔔 Get ready for the most wonderful time of the year! ❤️"),
+                  ("🎅🎄 GOOD MORNING! 🎄🎅", f"✨ There are **{days} days** left until Christmas! 🎁" + chr(10) + chr(10) + "☃️ Keep spreading the Christmas spirit!" + chr(10) + "🎁 Santa is getting closer... 👀"),
+                  ("❄️🎄 CHRISTMAS IS COMING! 🎄❄️", f"🎁 Only **{days} days** to go! 🎅" + chr(10) + chr(10) + "✨ Time to get into the Christmas spirit!" + chr(10) + "☃️ Who's ready?! ❤️")
               ]
               title, description = random.choice(messages)
               color = 16711680
