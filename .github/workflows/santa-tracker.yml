@@ -1,0 +1,73 @@
+name: Santa Tracker
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Run the simulated Santa tracker test"
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  santa-tracker-test:
+    if: ${{ inputs.test_mode == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send simulated Santa update
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CHANNEL_ID: "1430731225944821842"
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          token = os.environ["DISCORD_TOKEN"]
+          channel = os.environ["CHANNEL_ID"]
+          api_url = f"https://discord.com/api/v10/channels/{channel}/messages"
+
+          locations = [
+              ("🎅 North Pole", "🎄 Santa is getting ready for his journey!"),
+              ("🇦🇺 Australia", "🎁 Santa is making his way across Australia!"),
+              ("🇯🇵 Japan", "🦌 The reindeer are flying over Japan!"),
+              ("🇬🇧 United Kingdom", "🎅 Santa is heading across Europe!"),
+              ("🇺🇸 United States", "🎄 Santa is getting closer to home!"),
+          ]
+
+          headers = {
+              "Authorization": f"Bot {token}",
+              "Content-Type": "application/json",
+              "User-Agent": "BloxyWorldSantaTracker/1.0"
+          }
+
+          for location, status in locations:
+              eastern_now = datetime.now(ZoneInfo("America/New_York"))
+              embed = {
+                  "title": "🎅🎄 BLOXYWORLD SANTA TRACKER 🎄🎅",
+                  "description": f"📍 **Current Location:** {location}\n\n{status}",
+                  "color": 16711680,
+                  "fields": [
+                      {"name": "🎁 Presents Delivered", "value": "1,284,392,105", "inline": True},
+                      {"name": "🦌 Status", "value": "Flying", "inline": True},
+                      {"name": "⏱️ Update Interval", "value": "Every 5 minutes", "inline": True}
+                  ],
+                  "footer": {"text": "🎄 BloxyWorld Santa Tracker • TEST MODE"},
+                  "timestamp": eastern_now.isoformat()
+              }
+
+              req = urllib.request.Request(
+                  api_url,
+                  data=json.dumps({"embeds": [embed]}).encode(),
+                  headers=headers,
+                  method="POST"
+              )
+
+              with urllib.request.urlopen(req) as response:
+                  print(f"Discord response: {response.status}")
+
+              # Test interval: five minutes between simulated location updates.
+              import time
+              time.sleep(300)
+          PY
