@@ -28,11 +28,19 @@ jobs:
               christmas = date(today.year + 1, 12, 25)
           days = (christmas - today).days
 
-          if days == 0:
+          # Special Christmas-season kickoff on November 1.
+          if today == date(today.year, 11, 1):
+              title = "🎄🎅 IT’S TIME! 🎅🎄"
+              description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄" + chr(10) + "🎁 **54 days until Christmas!**"
+              color = 16711680
+              countdown_label = "🎄 54 days until Christmas!"
+              gif_url = "https://tenor.com/view/mariah-carey-its-time-xmas-christmas-gif-8201975091635355232"
+          elif days == 0:
               title = "🎄🎅 MERRY CHRISTMAS! 🎅🎄"
               description = "🎁 **Christmas is finally here!** ❤️" + chr(10) + chr(10) + "☃️ Hope everyone has an amazing Christmas filled with fun, food, family, friends, and plenty of Christmas spirit! ✨"
               color = 16711680
               countdown_label = "🎁 It's Christmas!"
+              gif_url = None
           else:
               messages = [
                   (
@@ -51,6 +59,7 @@ jobs:
               title, description = random.choice(messages)
               color = 16711680
               countdown_label = f"🎄 {days} days remaining"
+              gif_url = None
 
           embed = {
               "title": title,
@@ -64,11 +73,15 @@ jobs:
               "timestamp": eastern_now.isoformat()
           }
 
+          payload = {"embeds": [embed]}
+          if gif_url:
+              payload["content"] = gif_url
+
           token = os.environ["DISCORD_TOKEN"]
           channel = os.environ["CHANNEL_ID"]
           req = urllib.request.Request(
               f"https://discord.com/api/v10/channels/{channel}/messages",
-              data=json.dumps({"embeds": [embed]}).encode(),
+              data=json.dumps(payload).encode(),
               headers={
                   "Authorization": f"Bot {token}",
                   "Content-Type": "application/json",
