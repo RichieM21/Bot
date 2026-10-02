@@ -40,7 +40,7 @@ jobs:
 
           if today == date(today.year, 11, 1) or preview:
               title = "🎄🎅 IT’S TIME! 🎅🎄"
-              description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄" + chr(10) + "🎁 54 days until Christmas!"
+              description = "🎄 **CHRISTMAS COUNTDOWN HAS OFFICIALLY BEGUN!** 🎄" + chr(10) + chr(10) + "🎅 Mariah has been defrosted. It's time for Christmas! ❤️🎄"
               color = 16711680
               countdown_label = "🎄 54 days until Christmas!"
               gif_url = "https://media1.tenor.com/m/cdNE49GG_mAAAAAd/mariah-carey-its-time-xmas-christmas.gif"
