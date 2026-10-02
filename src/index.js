@@ -76,6 +76,117 @@ const EIGHT_BALL = [
   "Outlook not so good.", "Very doubtful."
 ];
 
+
+const EVENT_TESTS = {
+  halloween_trickortreat: {
+    title: "🍬 Trick-or-Treat",
+    outcomes: [
+      "🍫 You got a **Chocolate Bar**!",
+      "🍬 You got **3 pieces of candy**!",
+      "👻 A ghost scared you away — **no candy this time!**",
+      "🎃 You found a **Golden Pumpkin Candy**! Rare!",
+      "🕷️ You got a **Spooky Surprise**!"
+    ]
+  },
+  halloween_ghosthunt: {
+    title: "👻 Ghost Hunt",
+    outcomes: [
+      "👻 You caught a **Common Ghost**!",
+      "🟣 You caught a **Rare Ghost**!",
+      "💀 You caught an **Epic Ghost**!",
+      "🌟 You caught a **Legendary Ghost**!",
+      "👻 The ghost escaped!"
+    ]
+  },
+  halloween_zombie: {
+    title: "🧟 Zombie Survival",
+    outcomes: [
+      "🧟 You survived the wave!",
+      "🔫 You defeated **5 zombies**!",
+      "💀 You were overrun by zombies!",
+      "🏆 You found a safe zone and survived!",
+      "🧪 You discovered a zombie cure!"
+    ]
+  },
+  halloween_mystery: {
+    title: "🔎 Halloween Mystery",
+    outcomes: [
+      "🕯️ Clue found: **The haunted house**.",
+      "🩸 Clue found: **A mysterious footprint**.",
+      "🔑 Clue found: **An old key**.",
+      "📜 Clue found: **A torn journal page**.",
+      "👻 You found a clue but the trail went cold."
+    ]
+  },
+  halloween_pumpkinhunt: {
+    title: "🎃 Pumpkin Hunt",
+    outcomes: [
+      "🎃 You found a **Small Pumpkin**!",
+      "🎃 You found a **Jack-o'-Lantern**!",
+      "🧡 You found a **Golden Pumpkin**! Rare!",
+      "👻 You found a **Haunted Pumpkin**!",
+      "🔍 No pumpkin here — try again!"
+    ]
+  },
+  christmas_openpresent: {
+    title: "🎁 Open Present",
+    outcomes: [
+      "🎁 You opened a **Common Present**!",
+      "🎄 You got a **Rare Present**!",
+      "⭐ You got an **Epic Present**!",
+      "👑 You got a **Legendary Present**!",
+      "🎅 Santa left you **Coal**!"
+    ]
+  },
+  christmas_reindeerrace: {
+    title: "🦌 Reindeer Race",
+    outcomes: [
+      "🥇 **Blitzen** won the race!",
+      "🥈 **Dasher** came in second!",
+      "🥇 **Rudolph** pulled ahead at the finish!",
+      "🏆 Your reindeer won the race!",
+      "❄️ A snowstorm delayed the race!"
+    ]
+  },
+  christmas_workshop: {
+    title: "🧑‍🎄 Santa's Workshop",
+    outcomes: [
+      "🎁 You built a **Toy Robot**!",
+      "🧸 You built a **Teddy Bear**!",
+      "🚂 You built a **Toy Train**!",
+      "⭐ You completed a **Rare Present**!",
+      "🎅 Santa approved your present!"
+    ]
+  },
+  christmas_snowball: {
+    title: "❄️ Snowball Fight",
+    outcomes: [
+      "❄️ Direct hit! **+10 points**",
+      "☃️ Perfect shot! **+25 points**",
+      "😂 You missed and got hit back!",
+      "🏆 Critical hit! **+50 points**",
+      "🎄 You hit the Christmas tree!"
+    ]
+  },
+  christmas_santays: {
+    title: "🎅 Santa Says",
+    outcomes: [
+      "🎅 **Santa says:** Jump!",
+      "🎅 **Santa says:** Spin around!",
+      "🎅 **Santa says:** Do an emote!",
+      "🎄 **Santa says:** Freeze!",
+      "🎅 Santa didn't say anything — don't move!"
+    ]
+  }
+};
+
+function getEventTestResult(game) {
+  const event = EVENT_TESTS[game];
+  if (!event) throw new Error("Unknown seasonal game.");
+  const outcome = event.outcomes[Math.floor(Math.random() * event.outcomes.length)];
+  return { title: event.title, outcome };
+}
+
 const ROASTS = [
   "I'd roast you, but your gameplay already did that.",
   "You're not lagging — your decisions are.",
@@ -321,7 +432,7 @@ client.on(Events.InteractionCreate, async interaction => {
         "/pban", "/unpban", "/warn", "/warnings", "/clearwarnings", "/kick",
         "/ban", "/mute", "/unmute", "/history", "/notes", "/profile", "/gameinfo",
         "/modlog", "/stafflog", "/announce", "/shutdown", "/serverlock",
-        "/serverunlock", "/promote", "/demote", "/rankinfo", "/rankhistory", "/say"
+        "/serverunlock", "/promote", "/demote", "/rankinfo", "/rankhistory", "/say", "/eventtest"
       ];
       const everyoneCommands = [
         "/help", "/myinfo", "/verify", "/switchaccount", "/getrank", "/botinfo", "/ping",
@@ -407,6 +518,29 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.channel.send({ content: message });
       return;
     }
+
+    if (interaction.commandName === "eventtest") {
+      requireStaff(interaction);
+
+      const game = interaction.options.getString("game", true);
+      const result = getEventTestResult(game);
+
+      const embed = new EmbedBuilder()
+        .setColor(game.startsWith("halloween_") ? 0xf97316 : 0x22c55e)
+        .setTitle(`🧪 STAFF TEST — ${result.title}`)
+        .setDescription(result.outcome)
+        .addFields(
+          { name: "Mode", value: "Staff Test", inline: true },
+          { name: "Cooldown", value: "Bypassed", inline: true },
+          { name: "Leaderboard", value: "Not affected", inline: true }
+        )
+        .setFooter({ text: `Tested by ${interaction.user.username}` })
+        .setTimestamp();
+
+      await interaction.reply({ embeds: [embed], ephemeral: false });
+      return;
+    }
+
 
     if (interaction.commandName === "8ball") {
       const question = interaction.options.getString("question", true).trim();
